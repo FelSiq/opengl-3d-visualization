@@ -14,6 +14,14 @@ from OpenGL.GLUT import *
 
 """
 Configuration variables section
+
+Draw a pentadiagonal 
+function(x, y, l) { 
+    points = NULL; 
+    for (k in 72*(0:4)) points = rbind(points, c((x - l*0.5)*cos(0.4*pi*k), (y + tan(0.3*pi/2)*l)*sin(0.4*pi*k))); 
+    return (points) 
+}
+
 """
 
 WINDOW_WIDTH=1080
@@ -101,6 +109,11 @@ def drawPentagonalPrims(BaseEdgeSize, Height):
 	"""
 	Draws a Prims with a Pentagonal base.
 	"""
+    glBegin(GL_LINE_STRIP)
+
+    
+
+    glEnd()
 
 def drawHexagonalPyramid(radius, height):
 	"""
