@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 	TO DO LIST:
 	- PASS ARGUMENTS CORRECTLY TO "drawObject" function
@@ -6,8 +7,7 @@
 	- DRAW OBJECT C
 	- FIX/IMPROVE COMMENTARIES
 	- IMPLEMENT TRANSLATION
-	- IMPLEMENT SCALE (ZOOM IN/OUT)
-	- PRINT SUBTITLES
+	- IMPLEMENT SCALE (ZOOM IN/OUT)	
 	- SUBMIT
 	- USE MORE PROJECTION TYPES (ORTHO, FRUSTUM, PERSPECTVE)
 """
@@ -16,7 +16,7 @@
 """
 	Group:
 
-	B...
+	Bruno Mendes da Costa	9779433
 	Felipe Alves Siqueira	9847706
 	J...
 
@@ -62,7 +62,7 @@ def setup():
 
 	# Set options for the glut display mode
 	# GLUT_DOUBLE	: Double buffered window, helps reducing image flickering 
-	# GLUT_RGBA	: Set a window with RGBA color mode (this actually is the default value)
+	# GLUT_RGBA		: Set a window with RGBA color mode (this actually is the default value)
 	# GLUT_DEPTH	: Set a window with depth buffer
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH)
 
@@ -80,8 +80,39 @@ def setup():
 	glClearColor(0,0,0,0) # R G B A
 
 def drawSubtitles():
-	"""
-	"""
+	text = 'Subtitles' +\
+		'\nF1: object_A' +\
+		'\nF2: object_B' +\
+		'\nF3: object_C' +\
+		'\nd: +x_coord' +\
+		'\ns: +y_coord' +\
+		'\ne: +z_coord' +\
+		'\na: -x_coord' +\
+		'\nw: -y_coord' +\
+		'\nq: -z_coord' +\
+		'\nl: +x_angle' +\
+		'\nk: +y_angle' +\
+		'\no: +z_angle' +\
+		'\nj: -x_angle' +\
+		'\ni: -y_angle' +\
+		'\nu: -z_angle' +\
+		'\n+: +zoom' +\
+		'\n-: -zoom' +\
+		'\nt: show axis' +\
+		'\nSPACE: mirror' +\
+		'\nESC: exit'
+	glColor3f(0.75, 0.75, 0.1)
+	glLoadIdentity()
+	
+	yPos = -0.01
+	yInc = 30.0/WINDOW_HEIGHT
+	glRasterPos2f(-0.98, yPos)
+	for ch in text:
+		if ch != '\n':
+			glutBitmapCharacter(GLUT_BITMAP_9_BY_15, ord(ch))
+		else:
+			yPos -= yInc
+			glRasterPos2f(-0.98, yPos)
 
 def inputEvents(key, x, y):
 	"""
