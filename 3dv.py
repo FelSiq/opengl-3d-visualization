@@ -5,9 +5,9 @@
 	- IMPLEMENT KEYBOARD INPUTS
 	- DRAW OBJECT B
 	- DRAW OBJECT C
-	- FIX/IMPROVE COMMENTARIES
-	- IMPLEMENT TRANSLATION
+	- FIX/IMPROVE COMMENTARIES	
 	- IMPLEMENT SCALE (ZOOM IN/OUT)	
+	- IMPLEMENT MIRROR
 	- SUBMIT
 	- USE MORE PROJECTION TYPES (ORTHO, FRUSTUM, PERSPECTVE)
 """
@@ -40,6 +40,7 @@ Z_OBJECT_ANGLE=30.0
 X_COORD=0.0
 Y_COORD=0.0
 Z_COORD=0.0
+LIMIT_COORD=1.0
 ROTATION_INC=2.0
 TRANSLATION_INC=0.025
 SCALE_FACTOR_INC=0.05
@@ -127,12 +128,29 @@ def inputEvents(key, x, y):
 	global ENABLE_RENDER
 	global SHOW_AXIS
 
+	# SCALE COMMANDS
 	if key == b'+':
 		SCALE_FACTOR = min(SCALE_FACTOR_MAX, 
 				SCALE_FACTOR + SCALE_FACTOR_INC)
 	elif key == b'-':
 		SCALE_FACTOR = max(SCALE_FACTOR_MIN, 
 				SCALE_FACTOR - SCALE_FACTOR_INC)
+
+	# TRANSLATION COMMANDS
+	elif key == b'd':		
+		X_COORD = min(LIMIT_COORD, X_COORD + TRANSLATION_INC)		
+	elif key == b'a':
+		X_COORD = max(-LIMIT_COORD, X_COORD - TRANSLATION_INC)
+	elif key == b'e':
+		Y_COORD = min(LIMIT_COORD, Y_COORD + TRANSLATION_INC)		
+	elif key == b'q':
+		Y_COORD = max(-LIMIT_COORD, Y_COORD - TRANSLATION_INC)
+	elif key == b's':
+		Z_COORD = min(LIMIT_COORD, Z_COORD + TRANSLATION_INC)		
+	elif key == b'w':
+		Z_COORD = max(-LIMIT_COORD, Z_COORD - TRANSLATION_INC)
+	
+	# ROTATION COMMANDS
 	elif key == b'l':
 		X_OBJECT_ANGLE = (X_OBJECT_ANGLE + ROTATION_INC) % 360
 	elif key == b'j':
@@ -145,8 +163,12 @@ def inputEvents(key, x, y):
 		Z_OBJECT_ANGLE = (Z_OBJECT_ANGLE + ROTATION_INC) % 360
 	elif key == b'u':
 		Z_OBJECT_ANGLE = (Z_OBJECT_ANGLE - ROTATION_INC) % 360
+
+	# SHOW AXIS
 	elif key == b't':
 		SHOW_AXIS = not SHOW_AXIS
+
+	# EXIT
 	elif key == b'\x1b': 
 		# ESC KEY
 		print('Program is now exiting...')
@@ -268,8 +290,7 @@ def makeTransformations():
 	glRotatef(Y_OBJECT_ANGLE, 0, 1, 0)
 	glRotatef(Z_OBJECT_ANGLE, 0, 0, 1)
 	# glScale3f() must implement...
-	# glTranslate3f() must implement...
-
+	glTranslatef(X_COORD, Y_COORD, Z_COORD)
 
 def render():
 	# 1. Clean buffers (Color and Depth buffers)
