@@ -2,8 +2,7 @@
 """
 	TO DO LIST:
 	- PASS ARGUMENTS CORRECTLY TO "drawObject" function
-	- IMPLEMENT KEYBOARD INPUTS
-	- DRAW OBJECT B
+	- IMPLEMENT KEYBOARD INPUTS	
 	- DRAW OBJECT C
 	- FIX/IMPROVE COMMENTARIES	
 	- IMPLEMENT SCALE (ZOOM IN/OUT)	
@@ -11,7 +10,6 @@
 	- SUBMIT
 	- USE MORE PROJECTION TYPES (ORTHO, FRUSTUM, PERSPECTVE)
 """
-
 
 """
 	Group:
@@ -49,7 +47,7 @@ SCALE_FACTOR_MAX=1.0
 SCALE_FACTOR_MIN=0.025
 ENABLE_RENDER=True
 SHOW_AXIS=True
-OBJECT_ARGUMENTS=[1, 0.25, 0.75]
+OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
 COLOR_R=1.0
 COLOR_G=1.0
 COLOR_B=1.0
@@ -82,9 +80,9 @@ def setup():
 
 def drawSubtitles():
 	text = 'Subtitles' +\
-		'\nF1: object_A' +\
-		'\nF2: object_B' +\
-		'\nF3: object_C' +\
+		'\n1: drawTorus' +\
+		'\n2: drawPrism' +\
+		'\n3: drawPyramid' +\
 		'\nd: +x_coord' +\
 		'\ns: +y_coord' +\
 		'\ne: +z_coord' +\
@@ -127,9 +125,18 @@ def inputEvents(key, x, y):
 	global Z_COORD
 	global ENABLE_RENDER
 	global SHOW_AXIS
+	global OBJECT_ARGUMENTS
+
+	# DRAW OBJECTS
+	if key == b'1':
+		OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]		
+	elif key == b'2':
+		OBJECT_ARGUMENTS=[1, 0.25, 0.75, 20, 20]		
+	elif key == b'3':
+		OBJECT_ARGUMENTS=[2, 0.25, 0.75, 20, 20]		
 
 	# SCALE COMMANDS
-	if key == b'+':
+	elif key == b'+':
 		SCALE_FACTOR = min(SCALE_FACTOR_MAX, 
 				SCALE_FACTOR + SCALE_FACTOR_INC)
 	elif key == b'-':
@@ -181,11 +188,10 @@ def inputEvents(key, x, y):
 		ENABLE_RENDER=False
 		render()
 
-def drawCube(edgeSize):
-	"""
-	"""
-
-def drawPentagonalPrims(baseEdgeSize, height):
+def drawWireTorus(innerRadius, outerRadius, nsides, rings):
+	glutWireTorus(innerRadius, outerRadius, nsides, rings)
+	
+def drawPentagonalPrism(baseEdgeSize, height):
 	"""
 	Draws a Prims with a Pentagonal base.
 
@@ -232,10 +238,10 @@ def drawObject(args):
 	Call the function that draws the object via id
 	"""
 	id = args[0]
-	if id == 0: # Cube
-		drawCube(args[1])
+	if id == 0: # Wire Torus
+		drawWireTorus(args[1], args[2], args[3], args[4])
 	elif id == 1: # Petagonal Prims
-		drawPentagonalPrims(args[1], args[2])
+		drawPentagonalPrism(args[1], args[2])
 	elif id == 2: # Hexagonal Pyramid
 		drawHexagonalPyramid(args[1])
 	else:
