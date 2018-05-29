@@ -43,7 +43,7 @@ OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
 COLOR_R=1.0
 COLOR_G=1.0
 COLOR_B=1.0
-PERSPECTIVE=0
+PROJECTION_ID=0	
 
 def setup():
 	"""
@@ -75,6 +75,8 @@ def drawSubtitles():
 		'\n1: drawTorus' +\
 		'\n2: drawPrism' +\
 		'\n3: drawPyramid' +\
+		'\n4: Orthogonal Projection (default)' +\
+		'\n5: Perspective Projection' +\
 		'\nd: +x_coord' +\
 		'\ns: +y_coord' +\
 		'\ne: +z_coord' +\
@@ -132,6 +134,7 @@ def inputEvents(key, x, y):
 	global SCALE_Y_SIGNAL
 	global SCALE_Z_SIGNAL
 	global SCALE_FACTOR
+	global PROJECTION_ID
 
 	# DRAW OBJECTS
 	if key == b'1':
@@ -141,6 +144,12 @@ def inputEvents(key, x, y):
 	elif key == b'3':
 		OBJECT_ARGUMENTS=[2, 0.25, 3, 0.0, 0.0]		
 
+	# PROJECTIONS COMMANDS
+	elif key == b'4':
+		PROJECTION_ID=0
+	elif key == b'5':
+		PROJECTION_ID=1
+	
 	# SCALE COMMANDS
 	elif key == b'+':
 		SCALE_FACTOR = min(SCALE_FACTOR_MAX, 
@@ -312,12 +321,22 @@ def drawAxis():
 	glVertex3f(0, 0, AXIS_LIM)
 	glEnd()
 
+def chooseProjection(id):
+	
+	#Orthogonal Projection
+	if id == 0 :
+		glOrtho(2, -2, 2, -2, 2, -100)
+
+	#Perspective Projection (OpenGL)
+	elif id == 1 :
+		glFrustum(-2, 2, -2, 2, 2, 100)
+
 def makeTransformations():
 	# Load identity matrix
 	glLoadIdentity()
 
-	# Load projection matrix
-	glOrtho(2, -2, 2, -2, 2, -100)
+	# Choose projection type
+	chooseProjection(PROJECTION_ID)
 
 	"""
 	Make all transformations here...
