@@ -1,20 +1,11 @@
 #!/usr/bin/python3
-"""
-	TO DO LIST:
-	- PASS ARGUMENTS CORRECTLY TO "drawObject" function
-	- IMPLEMENT KEYBOARD INPUTS	
-	- DRAW OBJECT C
-	- FIX/IMPROVE COMMENTARIES	
-	- SUBMIT
-	- USE MORE PROJECTION TYPES (ORTHO, FRUSTUM, PERSPECTVE)
-"""
 
 """
 	Group:
 
 	Bruno Mendes da Costa	9779433
 	Felipe Alves Siqueira	9847706
-	J...
+	Josué Grâce Kabongo Kalala 9770382
 
 """
 
@@ -148,7 +139,7 @@ def inputEvents(key, x, y):
 	elif key == b'2':
 		OBJECT_ARGUMENTS=[1, 0.25, 0.75, 20, 20]		
 	elif key == b'3':
-		OBJECT_ARGUMENTS=[2, 0.25, 0.75, 20, 20]		
+		OBJECT_ARGUMENTS=[2, 0.25, 3, 0.0, 0.0]		
 
 	# SCALE COMMANDS
 	elif key == b'+':
@@ -247,9 +238,28 @@ def drawPentagonalPrism(baseEdgeSize, height):
 		glVertex3f(x[i+6], y[i+6], z[i+6])
 		glEnd()
 
-def drawHexagonalPyramid(radius, height):
+def drawHexagonalPyramid(width, height):
 	"""
+	Draws a Pyramid with an hexagonal base
 	"""
+
+	# 1. Defining all the vertexes of the object
+	vertexes = ((width,0,0),(width/2,0,width),(-width/2,0,width),
+		(-width,0,0),(-width/2,0,-width),(width/2,0,-width),(0,height*width,0))
+	
+	#2. Defining all the edges (conections between vertexes) of the object
+	edges = ((0,1),(0,5),(0,6),(1,2),(1,6),
+		(2,3),(2,6),(3,4),(3,6),(4,5),(4,6),(5,6))
+
+	#3. Especify that we will draw lines
+	glBegin(GL_LINES)
+
+	#4. Connecting everything
+	for edge in edges:
+		for vertex in edge:
+			glVertex3fv(vertexes[vertex])
+	
+	glEnd()
 
 def drawObject(args):
 	"""
@@ -261,7 +271,7 @@ def drawObject(args):
 	elif id == 1: # Petagonal Prims
 		drawPentagonalPrism(args[1], args[2])
 	elif id == 2: # Hexagonal Pyramid
-		drawHexagonalPyramid(args[1])
+		drawHexagonalPyramid(args[1], args[2])
 	else:
 		raise ValueError('First argument of \'args\'',
 			'must be a integer between 0, 1 or 2.')
