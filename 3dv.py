@@ -5,8 +5,6 @@
 	- IMPLEMENT KEYBOARD INPUTS	
 	- DRAW OBJECT C
 	- FIX/IMPROVE COMMENTARIES	
-	- IMPLEMENT SCALE (ZOOM IN/OUT)	
-	- IMPLEMENT MIRROR
 	- SUBMIT
 	- USE MORE PROJECTION TYPES (ORTHO, FRUSTUM, PERSPECTVE)
 """
@@ -45,6 +43,9 @@ SCALE_FACTOR_INC=0.05
 SCALE_FACTOR=1.0
 SCALE_FACTOR_MAX=1.0
 SCALE_FACTOR_MIN=0.025
+SCALE_X_SIGNAL=1.0
+SCALE_Y_SIGNAL=1.0
+SCALE_Z_SIGNAL=1.0
 ENABLE_RENDER=True
 SHOW_AXIS=True
 OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
@@ -95,15 +96,25 @@ def drawSubtitles():
 		'\nj: -x_angle' +\
 		'\ni: -y_angle' +\
 		'\nu: -z_angle' +\
+		'\nb: x_mirror' +\
+		'\nn: y_mirror' +\
+		'\nm: z_mirror' +\
 		'\n+: +zoom' +\
 		'\n-: -zoom' +\
-		'\nt: show axis' +\
-		'\nSPACE: mirror' +\
-		'\nESC: exit'
+		'\nt: toggle axis' +\
+		'\nr: RESET' +\
+		'\nESC: exit' +\
+		'\n\nParameters:' +\
+		'\nX=' + str(round(X_COORD, 2)) +\
+		'\nY=' + str(round(Y_COORD, 2)) +\
+		'\nZ=' + str(round(Z_COORD, 2)) +\
+		'\nX_angle=' + str(round(X_OBJECT_ANGLE, 2)) +\
+		'\nY_angle=' + str(round(Y_OBJECT_ANGLE, 2)) +\
+		'\nZ_angle=' + str(round(Z_OBJECT_ANGLE, 2)) 
 	glColor3f(0.75, 0.75, 0.1)
 	glLoadIdentity()
 	
-	yPos = -0.01
+	yPos = 0.90
 	yInc = 30.0/WINDOW_HEIGHT
 	glRasterPos2f(-0.98, yPos)
 	for ch in text:
@@ -126,6 +137,10 @@ def inputEvents(key, x, y):
 	global ENABLE_RENDER
 	global SHOW_AXIS
 	global OBJECT_ARGUMENTS
+	global SCALE_X_SIGNAL
+	global SCALE_Y_SIGNAL
+	global SCALE_Z_SIGNAL
+	global SCALE_FACTOR
 
 	# DRAW OBJECTS
 	if key == b'1':
@@ -171,18 +186,36 @@ def inputEvents(key, x, y):
 	elif key == b'u':
 		Z_OBJECT_ANGLE = (Z_OBJECT_ANGLE - ROTATION_INC) % 360
 
+	# MIRRORING
+	elif key == b'b':
+		SCALE_X_SIGNAL = -SCALE_X_SIGNAL
+	elif key == b'n':
+		SCALE_Y_SIGNAL = -SCALE_Y_SIGNAL
+	elif key == b'm':
+		SCALE_Z_SIGNAL = -SCALE_Z_SIGNAL
+
 	# SHOW AXIS
 	elif key == b't':
 		SHOW_AXIS = not SHOW_AXIS
+
+	# RESET
+	elif key == b'r':
+		X_OBJECT_ANGLE=30.0
+		Y_OBJECT_ANGLE=30.0
+		Z_OBJECT_ANGLE=30.0
+		SCALE_X_SIGNAL=1.0
+		SCALE_Y_SIGNAL=1.0
+		SCALE_Z_SIGNAL=1.0
+		X_COORD=0.0
+		Y_COORD=0.0
+		Z_COORD=0.0
+		SCALE_FACTOR=1.0
 
 	# EXIT
 	elif key == b'\x1b': 
 		# ESC KEY
 		print('Program is now exiting...')
 		exit(0)
-
-	# Must implement all keyboard events right here with
-	# more elifs......
 
 	if ENABLE_RENDER:
 		ENABLE_RENDER=False
@@ -194,21 +227,6 @@ def drawWireTorus(innerRadius, outerRadius, nsides, rings):
 def drawPentagonalPrism(baseEdgeSize, height):
 	"""
 	Draws a Prims with a Pentagonal base.
-
-	Logic behind this implementation:
-
-	Draw a pentadiagonal 
-	function(x, y, l) { 
-	    points = NULL; 
-	    for (k in 72*(0:4)) points = rbind(points, 
-		c((x - l*0.5)*cos(0.4*pi*k), (y + tan(0.3*pi/2)*l)*sin(0.4*pi*k))); 
-	    return (points) 
-	}
-
-
-	A more direct but less readable implementation:
-	glVertex3f(-baseEdgeSize*0.5*math.cos(0.4*math.pi*k), 
-		math.tan(0.3*math.pi/2)*baseEdgeSize*math.sin(0.4*math.pi*k), 0)
 	"""
 	
 	x=[]
@@ -254,40 +272,43 @@ def drawAxis():
 	"""
 	AXIS_LIM = 1.0
 
-	glBegin(GL_LINES)
-
 	glColor3f(1, 0, 0)
+	glBegin(GL_LINES)
 	glVertex3f(AXIS_LIM, 0, 0)
 	glVertex3f(-AXIS_LIM, 0, 0)
 	glVertex3f(AXIS_LIM-0.1, -0.025, -0.025)
 	glVertex3f(AXIS_LIM, 0, 0)
 	glVertex3f(AXIS_LIM-0.1, 0.025, 0.025)
 	glVertex3f(AXIS_LIM, 0, 0)
+	glEnd()
 
 	glColor3f(0, 1, 0)
+	glBegin(GL_LINES)
 	glVertex3f(0, AXIS_LIM, 0)
 	glVertex3f(0, -AXIS_LIM, 0)
 	glVertex3f(-0.025, AXIS_LIM-0.1, -0.025)
 	glVertex3f(0, AXIS_LIM, 0)
 	glVertex3f(0.025, AXIS_LIM-0.1, 0.025)
 	glVertex3f(0, AXIS_LIM, 0)
+	glEnd()
 
 	glColor3f(0, 0, 1)
+	glBegin(GL_LINES)
 	glVertex3f(0, 0, AXIS_LIM)
 	glVertex3f(0, 0, -AXIS_LIM)
 	glVertex3f(-0.025, -0.025, AXIS_LIM-0.025)
 	glVertex3f(0, 0, AXIS_LIM)
 	glVertex3f(0.025, 0.025, AXIS_LIM-0.025)
 	glVertex3f(0, 0, AXIS_LIM)
-
 	glEnd()
 
 def makeTransformations():
-	# 1. Load identity matrix
+	# Load identity matrix
 	glLoadIdentity()
 
-	# 2. Load projection matrix
+	# Load projection matrix
 	glOrtho(2, -2, 2, -2, 2, -100)
+
 	"""
 	Make all transformations here...
 	"""
@@ -295,31 +316,37 @@ def makeTransformations():
 	glRotatef(X_OBJECT_ANGLE, 1, 0, 0)
 	glRotatef(Y_OBJECT_ANGLE, 0, 1, 0)
 	glRotatef(Z_OBJECT_ANGLE, 0, 0, 1)
-	# glScale3f() must implement...
-	glTranslatef(X_COORD, Y_COORD, Z_COORD)
 
-def render():
-	# 1. Clean buffers (Color and Depth buffers)
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
-	# 2. Make all transformations
-	makeTransformations()
-
-	# 3. draw axis
+	# Draw axis
 	if SHOW_AXIS:
 		drawAxis()
 
-	# 3.a Set object color...
+	glTranslatef(X_COORD, Y_COORD, Z_COORD)
+
+	glScalef(
+		SCALE_X_SIGNAL*SCALE_FACTOR, 
+		SCALE_Y_SIGNAL*SCALE_FACTOR, 
+		SCALE_Z_SIGNAL*SCALE_FACTOR)
+
+
+def render():
+	# Clean buffers (Color and Depth buffers)
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+	# Make all transformations
+	makeTransformations()
+
+	# Set object color...
 	# idk what buttons should control these... to be implemented...
 	glColor3f(COLOR_R, COLOR_G, COLOR_B)
 
-	# 4. Draw object (passing the id)
+	# Draw object (passing the id)
 	drawObject(OBJECT_ARGUMENTS)
 
-	# 4.b Draw text
+	# Draw text
 	drawSubtitles()
 
-	# 5. Call glutSwapBuffers (because 2 buffers)
+	# Call glutSwapBuffers (because 2 buffers)
 	# 1 --> glFlush --> For single buffers
 	# 2 --> glutSwapBuffers() --> For (and only for) 
 	#	double buffered windows: "An implicit glFlush 
