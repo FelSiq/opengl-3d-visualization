@@ -9,6 +9,11 @@
 
 """
 
+"""
+The report of this work will be submitted with the part 2.
+
+"""
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
@@ -75,7 +80,7 @@ def drawSubtitles():
 		'\n1: drawTorus' +\
 		'\n2: drawPrism' +\
 		'\n3: drawPyramid' +\
-		'\n4: Orthogonal Projection (default)' +\
+		'\n4: Orthogonal Projection' +\
 		'\n5: Perspective Projection' +\
 		'\nd: +x_coord' +\
 		'\ns: +y_coord' +\
@@ -194,7 +199,7 @@ def inputEvents(key, x, y):
 	elif key == b'm':
 		SCALE_Z_SIGNAL = -SCALE_Z_SIGNAL
 
-	# SHOW AXIS
+	# TOGGLE AXIS
 	elif key == b't':
 		SHOW_AXIS = not SHOW_AXIS
 
@@ -222,6 +227,9 @@ def inputEvents(key, x, y):
 		render()
 
 def drawWireTorus(innerRadius, outerRadius, nsides, rings):
+	"""
+	Draws a Wire Torus.
+	"""
 	glutWireTorus(innerRadius, outerRadius, nsides, rings)
 	
 def drawPentagonalPrism(baseEdgeSize, height):
@@ -256,14 +264,14 @@ def drawHexagonalPyramid(width, height):
 	vertexes = ((width,0,0),(width/2,0,width),(-width/2,0,width),
 		(-width,0,0),(-width/2,0,-width),(width/2,0,-width),(0,height*width,0))
 	
-	#2. Defining all the edges (conections between vertexes) of the object
+	# 2. Defining all the edges (conections between vertexes) of the object
 	edges = ((0,1),(0,5),(0,6),(1,2),(1,6),
 		(2,3),(2,6),(3,4),(3,6),(4,5),(4,6),(5,6))
 
-	#3. Especify that we will draw lines
+	# 3. Especify that we will draw lines
 	glBegin(GL_LINES)
 
-	#4. Connecting everything
+	# 4. Connecting everything
 	for edge in edges:
 		for vertex in edge:
 			glVertex3fv(vertexes[vertex])
@@ -322,26 +330,30 @@ def drawAxis():
 	glEnd()
 
 def chooseProjection(id):
-	
-	#Orthogonal Projection
-	if id == 0 :
-		glOrtho(2, -2, 2, -2, 2, -100)
-
-	#Perspective Projection (OpenGL)
-	elif id == 1 :
-		glFrustum(-2, 2, -2, 2, 2, 100)
-
-def makeTransformations():
 	# Load identity matrix
 	glLoadIdentity()
+	
+	# Orthogonal Projection
+	if id == 0 :
+		glOrtho(-1, 1, -1, 1, -10, 10)
+
+	# Perspective Projection(OpenGL)
+	elif id == 1 :
+		glFrustum(-1, 1, -1, 1, 1, 100)
+
+def makeTransformations():
+	# Sets that will work with the projection matrix
+	glMatrixMode(GL_PROJECTION)	
 
 	# Choose projection type
 	chooseProjection(PROJECTION_ID)
 
+	# Sets the observer settings
+	gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0)
+
 	"""
 	Make all transformations here...
-	"""
-	glLoadIdentity()
+	"""	
 	glRotatef(X_OBJECT_ANGLE, 1, 0, 0)
 	glRotatef(Y_OBJECT_ANGLE, 0, 1, 0)
 	glRotatef(Z_OBJECT_ANGLE, 0, 0, 1)
@@ -356,7 +368,6 @@ def makeTransformations():
 		SCALE_X_SIGNAL*SCALE_FACTOR, 
 		SCALE_Y_SIGNAL*SCALE_FACTOR, 
 		SCALE_Z_SIGNAL*SCALE_FACTOR)
-
 
 def render():
 	# Clean buffers (Color and Depth buffers)
@@ -387,7 +398,6 @@ def render():
 	ENABLE_RENDER=True
 
 if __name__ == '__main__':
-
 	# Set everything up in gl/glu/glut
 	setup()
 
