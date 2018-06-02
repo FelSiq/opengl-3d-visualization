@@ -215,6 +215,9 @@ def inputEvents(key, x, y):
 		Y_COORD=0.0
 		Z_COORD=0.0
 		SCALE_FACTOR=1.0
+		SCALE_X_SIGNAL=1.0 
+		SCALE_Y_SIGNAL=1.0 
+		SCALE_Z_SIGNAL=1.0 
 
 	# EXIT
 	elif key == b'\x1b': 
@@ -377,7 +380,6 @@ def render():
 	makeTransformations()
 
 	# Set object color...
-	# idk what buttons should control these... to be implemented...
 	glColor3f(COLOR_R, COLOR_G, COLOR_B)
 
 	# Draw object (passing the id)
