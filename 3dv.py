@@ -18,10 +18,10 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 import math
+from collections import OrderedDict as odict
 
 """
 Configuration variables section
-
 """
 
 WINDOW_WIDTH=1080
@@ -44,21 +44,33 @@ SCALE_Y_SIGNAL=1.0
 SCALE_Z_SIGNAL=1.0
 ENABLE_RENDER=True
 SHOW_AXIS=True
-OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
-COLOR_R=1.0
-COLOR_G=1.0
-COLOR_B=1.0
+OBJECT_ARGUMENTS=[ 0, 0.10, 0.25, 20, 40 ]
+LIGHT_POS=[ 0.0, 0.0, +10.0, 0.0 ]
 PROJECTION_ID=0	
+GENERAL_MAX_VAL=1.0
+GENERAL_MIN_VAL=0.0
+MAX_SHININESS=100.0
+MIN_SHININESS=0.0
+LIGHT_ARRAYS=odict()
+LIGHT_ARRAYS['MAT_AMBIENT']=[ 0.5, 0.5, 0.5, 0.5 ]
+LIGHT_ARRAYS['MAT_DIFFUSE']=[ 0.5, 0.5, 0.5, 0.5 ]
+LIGHT_ARRAYS['MAT_EMISSION']=[ 0.5, 0.5, 0.5, 0.5 ]
+LIGHT_ARRAYS['MAT_SPECULAR']=[ 0.5, 0.5, 0.5, 0.5 ]
+LIGHT_ARRAYS['MAT_SHININESS']=[ 50.0 ]
+LIGHT_ARRAYS['MAT_COLOR']=[ 1.0, 1.0, 1.0 ]
+
+CURRENT_LIGHT_MAT='MAT_AMBIENT'
+CURRENT_LIGHT_OPT=0
 
 def setup():
 	"""
 	Set up everything needed on for the gl/glu/glut.
 	"""
 	glutInit()
-
+ 
 	# Set options for the glut display mode
 	# GLUT_DOUBLE	: Double buffered window, helps reducing image flickering 
-	# GLUT_RGBA		: Set a window with RGBA color mode (this actually is the default value)
+	# GLUT_RGBA	: Set a window with RGBA color mode (this actually is the default value)
 	# GLUT_DEPTH	: Set a window with depth buffer
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH)
 
@@ -75,6 +87,56 @@ def setup():
 	# but could easily be another color)
 	glClearColor(0,0,0,0) # R G B A
 
+"""
+
+"""
+def lightInit():
+	# Begin Lighting
+	initLighting()
+
+	# 
+	glEnable(GL_LIGHTING)
+
+	# 
+	glEnable(GL_LIGHT0)
+	
+	# 
+	glEnable(GL_COLOR_MATERIAL)
+
+	# 
+	global LIGHT_POS 
+	glLightfv(GL_LIGHT0, 
+		GL_POSITION, 
+		LIGHT_POS)
+
+"""
+
+"""
+def shadingOptions():
+	None
+
+"""
+
+"""
+def setMaterial():
+	glMaterialfv(GL_FRONT, GL_AMBIENT, LIGHT_ARRAYS['MAT_AMBIENT'])
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, LIGHT_ARRAYS['MAT_DIFFUSE'])
+	glMaterialfv(GL_FRONT, GL_SPECULAR, LIGHT_ARRAYS['MAT_SPECULAR'])
+	glMaterialfv(GL_FRONT, GL_SHININESS, LIGHT_ARRAYS['MAT_SHININESS'])
+	glMaterialfv(GL_FRONT, GL_EMISSION, LIGHT_ARRAYS['MAT_EMISSION'])
+
+
+"""
+
+"""
+def brackets(i, string):
+	return '['+string+']' \
+		if i == CURRENT_LIGHT_OPT \
+		else ' '+string+' '
+
+"""
+
+"""	
 def drawSubtitles():
 	text = 'Subtitles' +\
 		'\n1: drawTorus' +\
@@ -108,8 +170,10 @@ def drawSubtitles():
 		'\nZ=' + str(round(Z_COORD, 2)) +\
 		'\nX_angle=' + str(round(X_OBJECT_ANGLE, 2)) +\
 		'\nY_angle=' + str(round(Y_OBJECT_ANGLE, 2)) +\
-		'\nZ_angle=' + str(round(Z_OBJECT_ANGLE, 2)) 
-	glColor3f(0.75, 0.75, 0.1)
+		'\nZ_angle=' + str(round(Z_OBJECT_ANGLE, 2)) +\
+		'\nzoom=' + str(round(SCALE_FACTOR*100)) + '%'
+
+	glColor3f(0.75, 0.75, 0.10)
 	glLoadIdentity()
 	
 	yPos = 0.90
@@ -122,6 +186,42 @@ def drawSubtitles():
 			yPos -= yInc
 			glRasterPos2f(-0.98, yPos)
 
+	# Subtitle related to light-related stuff
+	text='  Light config:\n'
+	for mat, key in zip(LIGHT_ARRAYS.keys(), ['6', '7', '8', '9', '0', ')']):
+		text+= '*' if CURRENT_LIGHT_MAT==mat else ' '
+		text+=' '+key+': '+mat+'\n  '
+		vals=list(map(str, [round(i, 1) for i in LIGHT_ARRAYS[mat]]))
+		if mat == CURRENT_LIGHT_MAT:
+			for i in range(len(vals)):
+				text+=brackets(i, vals[i])
+		else:
+			text+=' '
+			text+='  '.join(vals)
+		text+='\n'
+
+	text+='commands:\n' +\
+		'g: +current\n' +\
+		'h: -current\n' +\
+		'.: next param\n'+\
+		',: prev param'
+	
+	glColor3f(0.05, 0.25, 0.90)
+	yPos=0.90
+	yInc=30.0/WINDOW_HEIGHT
+	glRasterPos2f(0.60, yPos)
+
+	for ch in text:
+		if ch != '\n':
+			glutBitmapCharacter(GLUT_BITMAP_9_BY_15, ord(ch))
+		else:
+			yPos -= yInc
+			glRasterPos2f(0.60, yPos)
+
+
+"""
+
+"""
 def inputEvents(key, x, y):
 	"""
 	Map all input keys
@@ -140,6 +240,13 @@ def inputEvents(key, x, y):
 	global SCALE_Z_SIGNAL
 	global SCALE_FACTOR
 	global PROJECTION_ID
+	global GENERAL_MAX_VAL
+	global GENERAL_MIN_VAL
+	global MAX_SHININESS
+	global MIN_SHININESS
+	global LIGHT_ARRAYS
+	global CURRENT_LIGHT_MAT
+	global CURRENT_LIGHT_OPT
 
 	# DRAW OBJECTS
 	if key == b'1':
@@ -218,6 +325,59 @@ def inputEvents(key, x, y):
 		SCALE_X_SIGNAL=1.0 
 		SCALE_Y_SIGNAL=1.0 
 		SCALE_Z_SIGNAL=1.0 
+
+	# LIGHT ARRAY PARAMETERS
+	elif key == b'6':
+		CURRENT_LIGHT_MAT='MAT_AMBIENT' 
+	elif key == b'7':
+		CURRENT_LIGHT_MAT='MAT_DIFFUSE'
+	elif key == b'8':
+		CURRENT_LIGHT_MAT='MAT_EMISSION' 
+	elif key == b'9':
+		CURRENT_LIGHT_MAT='MAT_SPECULAR' 
+	elif key == b'0':
+		CURRENT_LIGHT_OPT=0
+		CURRENT_LIGHT_MAT='MAT_SHININESS' 
+	elif key == b')':
+		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT, 
+			len(LIGHT_ARRAYS['MAT_COLOR'])-1)
+		CURRENT_LIGHT_MAT='MAT_COLOR' 
+
+	# DECREMENT CURRENT PARAMETER OF CURRENT 
+	# LIGHT CONFIG ARRAY
+	elif key == b'g':
+		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT, 
+			len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])-1)
+		curVal=LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
+			[CURRENT_LIGHT_OPT]
+		newVal=max(GENERAL_MIN_VAL, curVal-0.1) \
+			if CURRENT_LIGHT_MAT != 'MAT_SHININESS' \
+			else max(MIN_SHININESS, curVal-1.0)
+
+		LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
+			[CURRENT_LIGHT_OPT]=newVal
+
+	# INCREMENT CURRENT PARAMETER OF CURRENT 
+	# LIGHT CONFIG ARRAY
+	elif key == b'h':
+		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT, 
+			len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])-1)
+		curVal=LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
+			[CURRENT_LIGHT_OPT]
+		newVal=min(GENERAL_MAX_VAL, curVal+0.1) \
+			if CURRENT_LIGHT_MAT != 'MAT_SHININESS' \
+			else min(MAX_SHININESS, curVal+1.0)
+
+		LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
+			[CURRENT_LIGHT_OPT]=newVal
+
+	# 
+	elif key == b',':
+		n=len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])
+		CURRENT_LIGHT_OPT=(CURRENT_LIGHT_OPT-1)%n
+	elif key == b'.':
+		n=len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])
+		CURRENT_LIGHT_OPT=(CURRENT_LIGHT_OPT+1)%n
 
 	# EXIT
 	elif key == b'\x1b': 
@@ -354,6 +514,12 @@ def makeTransformations():
 	# Sets the observer settings
 	gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0)
 
+	# Light-related transformations
+	glMatrixMode(GL_MODELVIEW)
+	shadingOptions()
+	setMaterial()
+
+	glMatrixMode(GL_PROJECTION)	
 	"""
 	Make all transformations here...
 	"""	
@@ -372,6 +538,7 @@ def makeTransformations():
 		SCALE_Y_SIGNAL*SCALE_FACTOR, 
 		SCALE_Z_SIGNAL*SCALE_FACTOR)
 
+
 def render():
 	# Clean buffers (Color and Depth buffers)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -380,7 +547,10 @@ def render():
 	makeTransformations()
 
 	# Set object color...
-	glColor3f(COLOR_R, COLOR_G, COLOR_B)
+	cR=LIGHT_ARRAYS['MAT_COLOR'][0]
+	cG=LIGHT_ARRAYS['MAT_COLOR'][1]
+	cB=LIGHT_ARRAYS['MAT_COLOR'][2]
+	glColor3f(cR, cG, cB)
 
 	# Draw object (passing the id)
 	drawObject(OBJECT_ARGUMENTS)
