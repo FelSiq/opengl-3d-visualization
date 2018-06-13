@@ -94,6 +94,9 @@ def lightInit():
 	# Begin Lighting
 	initLighting()
 
+	#
+	glShadeModel(GL_SMOOTH);
+
 	# 
 	glEnable(GL_LIGHTING)
 
@@ -105,15 +108,81 @@ def lightInit():
 
 	# 
 	global LIGHT_POS 
-	glLightfv(GL_LIGHT0, 
-		GL_POSITION, 
-		LIGHT_POS)
+	glLightfv(GL_LIGHT0, GL_POSITION, LIGHT_POS)
+
+	# definindo todos os componentes da luz 0)
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR,light_specular);
+	glLightfv(GL_LIGHT0, GL_POSITION,light_position);
 
 """
 
 """
 def shadingOptions():
 	None
+
+# Inicializa a luz
+def initLighting():
+    # Informa que irá utilizar iluminação    
+    glEnable(GL_LIGHTING)
+    # Liga a luz0
+    glEnable(GL_LIGHT0)
+    # Informa que irá utilizar as cores do material
+    glEnable(GL_COLOR_MATERIAL)
+
+# Define a posição da luz 0
+def setLight():
+    light_position = [10.0, 10.0, -20.0, 0.0]
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+
+# Função utilizada para definir as propriedades do material
+def setMaterial(currentMaterial):
+    no_mat = [ 0.0, 0.0, 0.0, 1.0 ]
+    mat_ambient = [ 0.7, 0.7, 0.7, 1.0 ]
+    mat_ambient_color = [ 0.8, 0.8, 0.2, 1.0 ]
+    mat_diffuse = [ 0.1, 0.5, 0.8, 1.0 ]
+    mat_specular = [ 1.0, 1.0, 1.0, 1.0 ]
+    no_shininess = [ 0.0 ]
+    low_shininess = [ 5.0 ]
+    high_shininess = [ 100.0 ]
+    mat_emission = [0.3, 0.2, 0.2, 0.0]
+    if currentMaterial ==  0:
+        # Diffuse reflection only; no ambient or specular  
+        glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+        glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
+        glMaterialfv(GL_FRONT, GL_SHININESS, no_shininess);
+        glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
+    elif currentMaterial ==  1:
+        # Diffuse and specular reflection; low shininess; no ambient
+        glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+        glMaterialfv(GL_FRONT, GL_SHININESS, low_shininess);
+        glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
+    elif currentMaterial ==  2:
+        # Diffuse and specular reflection; high shininess; no ambient
+        glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+        glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
+        glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
+    elif currentMaterial ==  3:
+        # Diffuse refl.; emission; no ambient or specular reflection
+        glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+        glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
+        glMaterialfv(GL_FRONT, GL_SHININESS, no_shininess);
+        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission);
+
+	# Função para definir o tipo de tonalização
+	def setShading(sType):
+	    if sType == 0:
+        	glShadeModel(GL_SMOOTH)
+    	elif sType == 1:
+	        glShadeModel(GL_FLAT)
 
 """
 
@@ -393,7 +462,7 @@ def drawWireTorus(innerRadius, outerRadius, nsides, rings):
 	"""
 	Draws a Wire Torus.
 	"""
-	glutWireTorus(innerRadius, outerRadius, nsides, rings)
+	glutSolidTorus(innerRadius, outerRadius, nsides, rings)
 	
 def drawPentagonalPrism(baseEdgeSize, height):
 	"""
@@ -542,6 +611,11 @@ def makeTransformations():
 def render():
 	# Clean buffers (Color and Depth buffers)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+	# Define que irá trabalhar com a matriz de modelo/visão
+    #glMatrixMode(GL_MODELVIEW)
+    setLight()
+    setShading(curShading)
 
 	# Make all transformations
 	makeTransformations()
