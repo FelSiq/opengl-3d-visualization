@@ -10,6 +10,21 @@
 """
 
 """
+	TODO:		
+		Definir teclas para tonalização e fonte de iluminação, por enquanto está z e x.
+		Imprimir na tela legendas para ^
+		Desenhar modelo sólido dos objetos restantes.
+		Definir tecla para trocar entre modelo de arame e sólido,
+		Apresentar na legenda ^		
+		Atualizar reset para configurações acima tambem ^
+		Organizar o código.
+		Achar o segfault de quando fecha.
+		Implementar o que o monitor sugeriu do Phong.
+		Traduzir os comentários para o inglês.
+		Justificar no relatório as decisões de projeto.
+"""
+
+"""
 The report of this work will be submitted with the part 2.
 
 """
@@ -23,15 +38,11 @@ from collections import OrderedDict as odict
 """
 Configuration variables section
 """
-
+SOLID_TORUS=True
 WINDOW_WIDTH=1080
 WINDOW_HEIGHT=640
-X_OBJECT_ANGLE=30.0
-Y_OBJECT_ANGLE=30.0
-Z_OBJECT_ANGLE=30.0
-X_COORD=0.0
-Y_COORD=0.0
-Z_COORD=0.0
+X_OBJECT_ANGLE=Y_OBJECT_ANGLE=Z_OBJECT_ANGLE=30.0
+X_COORD=Y_COORD=Z_COORD=0.0
 LIMIT_COORD=1.0
 ROTATION_INC=2.0
 TRANSLATION_INC=0.025
@@ -39,28 +50,30 @@ SCALE_FACTOR_INC=0.05
 SCALE_FACTOR=1.0
 SCALE_FACTOR_MAX=1.0
 SCALE_FACTOR_MIN=0.025
-SCALE_X_SIGNAL=1.0
-SCALE_Y_SIGNAL=1.0
-SCALE_Z_SIGNAL=1.0
+SCALE_X_SIGNAL=SCALE_Y_SIGNAL=SCALE_Z_SIGNAL=1.0
 ENABLE_RENDER=True
 SHOW_AXIS=True
-OBJECT_ARGUMENTS=[ 0, 0.10, 0.25, 20, 40 ]
-LIGHT_POS=[ 0.0, 0.0, +10.0, 0.0 ]
+OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
+LIGHT_AMBIENT=[0.0, 0.0, 0.0, 1.0];
+LIGHT_DIFFUSE=[1.0, 1.0, 1.0, 1.0];
+LIGHT_SPECULAR=[1.0, 1.0, 1.0, 1.0];
+LIGHT_POSITION=[2.0, 5.0, 5.0, 0.0];
 PROJECTION_ID=0	
 GENERAL_MAX_VAL=1.0
 GENERAL_MIN_VAL=0.0
 MAX_SHININESS=100.0
 MIN_SHININESS=0.0
 LIGHT_ARRAYS=odict()
-LIGHT_ARRAYS['MAT_AMBIENT']=[ 0.5, 0.5, 0.5, 0.5 ]
-LIGHT_ARRAYS['MAT_DIFFUSE']=[ 0.5, 0.5, 0.5, 0.5 ]
-LIGHT_ARRAYS['MAT_EMISSION']=[ 0.5, 0.5, 0.5, 0.5 ]
-LIGHT_ARRAYS['MAT_SPECULAR']=[ 0.5, 0.5, 0.5, 0.5 ]
-LIGHT_ARRAYS['MAT_SHININESS']=[ 50.0 ]
-LIGHT_ARRAYS['MAT_COLOR']=[ 1.0, 1.0, 1.0 ]
-
+LIGHT_ARRAYS['MAT_AMBIENT']=[0.0, 0.0, 0.0, 0.0]
+LIGHT_ARRAYS['MAT_DIFFUSE']=[0.1, 0.5, 0.8, 1.0]
+LIGHT_ARRAYS['MAT_EMISSION']=[0.0, 0.0, 0.0, 0.0]
+LIGHT_ARRAYS['MAT_SPECULAR']=[0.0, 0.0, 0.0, 0.0]
+LIGHT_ARRAYS['MAT_SHININESS']=[50.0]
+LIGHT_ARRAYS['MAT_COLOR']=[1.0, 1.0, 1.0]
+CURRENT_SHADING=1
 CURRENT_LIGHT_MAT='MAT_AMBIENT'
 CURRENT_LIGHT_OPT=0
+MATERIAL_OPT=0
 
 def setup():
 	"""
@@ -87,114 +100,85 @@ def setup():
 	# but could easily be another color)
 	glClearColor(0,0,0,0) # R G B A
 
-"""
+	lightInit()
 
-"""
+# Begin Lighting
 def lightInit():
-	# Begin Lighting
-	initLighting()
-
-	#
-	glShadeModel(GL_SMOOTH);
-
-	# 
+	# Informa que irá utilizar iluminação    
 	glEnable(GL_LIGHTING)
-
-	# 
+	
+	# Liga a luz0
 	glEnable(GL_LIGHT0)
 	
-	# 
+	# Informa que irá utilizar as cores do material
 	glEnable(GL_COLOR_MATERIAL)
 
-	# 
-	global LIGHT_POS 
-	glLightfv(GL_LIGHT0, GL_POSITION, LIGHT_POS)
-
-	# definindo todos os componentes da luz 0)
-	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-	glLightfv(GL_LIGHT0, GL_SPECULAR,light_specular);
-	glLightfv(GL_LIGHT0, GL_POSITION,light_position);
-
-"""
-
-"""
-def shadingOptions():
-	None
-
-# Inicializa a luz
-def initLighting():
-    # Informa que irá utilizar iluminação    
-    glEnable(GL_LIGHTING)
-    # Liga a luz0
-    glEnable(GL_LIGHT0)
-    # Informa que irá utilizar as cores do material
-    glEnable(GL_COLOR_MATERIAL)
+	setLight()
 
 # Define a posição da luz 0
 def setLight():
-    light_position = [10.0, 10.0, -20.0, 0.0]
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	# Definindo todos os componentes da luz 0)
+	glLightfv(GL_LIGHT0, GL_AMBIENT, LIGHT_AMBIENT);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, LIGHT_DIFFUSE);
+	glLightfv(GL_LIGHT0, GL_SPECULAR,LIGHT_SPECULAR);
+	glLightfv(GL_LIGHT0, GL_POSITION, LIGHT_POSITION);
 
+# Função para definir o tipo de tonalização
+def shadingOptions():
+	if CURRENT_SHADING == 0:
+		glShadeModel(GL_SMOOTH)
+	elif CURRENT_SHADING == 1:
+		glShadeModel(GL_FLAT)
 
 # Função utilizada para definir as propriedades do material
-def setMaterial(currentMaterial):
-    no_mat = [ 0.0, 0.0, 0.0, 1.0 ]
-    mat_ambient = [ 0.7, 0.7, 0.7, 1.0 ]
-    mat_ambient_color = [ 0.8, 0.8, 0.2, 1.0 ]
-    mat_diffuse = [ 0.1, 0.5, 0.8, 1.0 ]
-    mat_specular = [ 1.0, 1.0, 1.0, 1.0 ]
-    no_shininess = [ 0.0 ]
-    low_shininess = [ 5.0 ]
-    high_shininess = [ 100.0 ]
-    mat_emission = [0.3, 0.2, 0.2, 0.0]
-    if currentMaterial ==  0:
-        # Diffuse reflection only; no ambient or specular  
-        glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
-        glMaterialfv(GL_FRONT, GL_SHININESS, no_shininess);
-        glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
-    elif currentMaterial ==  1:
-        # Diffuse and specular reflection; low shininess; no ambient
-        glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-        glMaterialfv(GL_FRONT, GL_SHININESS, low_shininess);
-        glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
-    elif currentMaterial ==  2:
-        # Diffuse and specular reflection; high shininess; no ambient
-        glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-        glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
-        glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
-    elif currentMaterial ==  3:
-        # Diffuse refl.; emission; no ambient or specular reflection
-        glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, no_mat);
-        glMaterialfv(GL_FRONT, GL_SHININESS, no_shininess);
-        glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission);
+def setMaterial():	
+	global LIGHT_ARRAYS
+	no_mat = [0.0, 0.0, 0.0, 1.0]
+	mat_ambient = [0.7, 0.7, 0.7, 1.0]
+	mat_ambient_color = [0.8, 0.8, 0.2, 1.0]
+	mat_diffuse = [0.1, 0.5, 0.8, 1.0]
+	mat_specular = [1.0, 1.0, 1.0, 1.0]
+	no_shininess = [0.0, 0.0, 0.0, 0.0]
+	low_shininess = [5.0]
+	high_shininess = [100.0]
+	mat_emission = [0.3, 0.2, 0.2, 0.0]
+	
+	if MATERIAL_OPT ==  0:
+		# Diffuse reflection only; no ambient or specular
+		LIGHT_ARRAYS['MAT_AMBIENT']=no_mat
+		LIGHT_ARRAYS['MAT_DIFFUSE']=mat_diffuse
+		LIGHT_ARRAYS['MAT_SPECULAR']=no_mat
+		LIGHT_ARRAYS['MAT_SHININESS']=no_shininess 
+		LIGHT_ARRAYS['MAT_EMISSION']=no_mat
+	elif MATERIAL_OPT ==  1:
+		# Diffuse and specular reflection; low shininess; no ambient
+		LIGHT_ARRAYS['MAT_AMBIENT']=no_mat
+		LIGHT_ARRAYS['MAT_DIFFUSE']=mat_diffuse
+		LIGHT_ARRAYS['MAT_SPECULAR']=mat_specular
+		LIGHT_ARRAYS['MAT_SHININESS']=low_shininess
+		LIGHT_ARRAYS['MAT_EMISSION']=no_mat
+	elif MATERIAL_OPT ==  2:
+		# Diffuse and specular reflection; high shininess; no ambient
+		LIGHT_ARRAYS['MAT_AMBIENT']=no_mat
+		LIGHT_ARRAYS['MAT_DIFFUSE']=mat_diffuse
+		LIGHT_ARRAYS['MAT_SPECULAR']=mat_specular
+		LIGHT_ARRAYS['MAT_SHININESS']=high_shininess
+		LIGHT_ARRAYS['MAT_EMISSION']=no_mat
+	elif MATERIAL_OPT ==  3:
+		# Diffuse refl.; emission; no ambient or specular reflection
+		LIGHT_ARRAYS['MAT_AMBIENT']=no_mat
+		LIGHT_ARRAYS['MAT_DIFFUSE']=mat_diffuse
+		LIGHT_ARRAYS['MAT_SPECULAR']=no_mat
+		LIGHT_ARRAYS['MAT_SHININESS']=no_shininess
+		LIGHT_ARRAYS['MAT_EMISSION']=mat_emission
+	#elif MATERIAL_OPT = 4: 4 Allows Manual Parameters
 
-	# Função para definir o tipo de tonalização
-	def setShading(sType):
-	    if sType == 0:
-        	glShadeModel(GL_SMOOTH)
-    	elif sType == 1:
-	        glShadeModel(GL_FLAT)
-
-"""
-
-"""
-def setMaterial():
 	glMaterialfv(GL_FRONT, GL_AMBIENT, LIGHT_ARRAYS['MAT_AMBIENT'])
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, LIGHT_ARRAYS['MAT_DIFFUSE'])
 	glMaterialfv(GL_FRONT, GL_SPECULAR, LIGHT_ARRAYS['MAT_SPECULAR'])
 	glMaterialfv(GL_FRONT, GL_SHININESS, LIGHT_ARRAYS['MAT_SHININESS'])
 	glMaterialfv(GL_FRONT, GL_EMISSION, LIGHT_ARRAYS['MAT_EMISSION'])
-
-
+	
 """
 
 """
@@ -207,6 +191,7 @@ def brackets(i, string):
 
 """	
 def drawSubtitles():
+	glDisable(GL_LIGHTING)
 	text = 'Subtitles' +\
 		'\n1: drawTorus' +\
 		'\n2: drawPrism' +\
@@ -286,7 +271,7 @@ def drawSubtitles():
 		else:
 			yPos -= yInc
 			glRasterPos2f(0.60, yPos)
-
+	glEnable(GL_LIGHTING)
 
 """
 
@@ -295,31 +280,23 @@ def inputEvents(key, x, y):
 	"""
 	Map all input keys
 	"""
-	global X_OBJECT_ANGLE
-	global Y_OBJECT_ANGLE
-	global Z_OBJECT_ANGLE
-	global X_COORD
-	global Y_COORD
-	global Z_COORD
-	global ENABLE_RENDER
-	global SHOW_AXIS
+	global CURRENT_LIGHT_MAT, CURRENT_LIGHT_OPT, CURRENT_SHADING, SOLID_TORUS, MATERIAL_OPT
+	global SCALE_X_SIGNAL, SCALE_Y_SIGNAL, SCALE_Z_SIGNAL
+	global X_OBJECT_ANGLE, Y_OBJECT_ANGLE, Z_OBJECT_ANGLE
+	global GENERAL_MAX_VAL, GENERAL_MIN_VAL
+	global MAX_SHININESS, MIN_SHININESS
+	global X_COORD, Y_COORD, Z_COORD
 	global OBJECT_ARGUMENTS
-	global SCALE_X_SIGNAL
-	global SCALE_Y_SIGNAL
-	global SCALE_Z_SIGNAL
-	global SCALE_FACTOR
+	global ENABLE_RENDER
 	global PROJECTION_ID
-	global GENERAL_MAX_VAL
-	global GENERAL_MIN_VAL
-	global MAX_SHININESS
-	global MIN_SHININESS
+	global SCALE_FACTOR
 	global LIGHT_ARRAYS
-	global CURRENT_LIGHT_MAT
-	global CURRENT_LIGHT_OPT
+	global SHOW_AXIS
 
 	# DRAW OBJECTS
 	if key == b'1':
-		OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]		
+		OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
+		SOLID_TORUS = not SOLID_TORUS
 	elif key == b'2':
 		OBJECT_ARGUMENTS=[1, 0.25, 0.75, 20, 20]		
 	elif key == b'3':
@@ -333,11 +310,9 @@ def inputEvents(key, x, y):
 	
 	# SCALE COMMANDS
 	elif key == b'+':
-		SCALE_FACTOR = min(SCALE_FACTOR_MAX, 
-				SCALE_FACTOR + SCALE_FACTOR_INC)
+		SCALE_FACTOR = min(SCALE_FACTOR_MAX, SCALE_FACTOR + SCALE_FACTOR_INC)
 	elif key == b'-':
-		SCALE_FACTOR = max(SCALE_FACTOR_MIN, 
-				SCALE_FACTOR - SCALE_FACTOR_INC)
+		SCALE_FACTOR = max(SCALE_FACTOR_MIN, SCALE_FACTOR - SCALE_FACTOR_INC)
 
 	# TRANSLATION COMMANDS
 	elif key == b'd':		
@@ -381,19 +356,10 @@ def inputEvents(key, x, y):
 
 	# RESET
 	elif key == b'r':
-		X_OBJECT_ANGLE=30.0
-		Y_OBJECT_ANGLE=30.0
-		Z_OBJECT_ANGLE=30.0
-		SCALE_X_SIGNAL=1.0
-		SCALE_Y_SIGNAL=1.0
-		SCALE_Z_SIGNAL=1.0
-		X_COORD=0.0
-		Y_COORD=0.0
-		Z_COORD=0.0
+		X_OBJECT_ANGLE=Y_OBJECT_ANGLE=Z_OBJECT_ANGLE=30.0		
+		SCALE_X_SIGNAL=SCALE_Y_SIGNAL=SCALE_Z_SIGNAL=1.0 
+		X_COORD=Y_COORD=Z_COORD=0.0
 		SCALE_FACTOR=1.0
-		SCALE_X_SIGNAL=1.0 
-		SCALE_Y_SIGNAL=1.0 
-		SCALE_Z_SIGNAL=1.0 
 
 	# LIGHT ARRAY PARAMETERS
 	elif key == b'6':
@@ -408,15 +374,13 @@ def inputEvents(key, x, y):
 		CURRENT_LIGHT_OPT=0
 		CURRENT_LIGHT_MAT='MAT_SHININESS' 
 	elif key == b')':
-		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT, 
-			len(LIGHT_ARRAYS['MAT_COLOR'])-1)
+		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT,len(LIGHT_ARRAYS['MAT_COLOR'])-1)
 		CURRENT_LIGHT_MAT='MAT_COLOR' 
 
 	# DECREMENT CURRENT PARAMETER OF CURRENT 
 	# LIGHT CONFIG ARRAY
 	elif key == b'g':
-		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT, 
-			len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])-1)
+		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT,len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])-1)
 		curVal=LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
 			[CURRENT_LIGHT_OPT]
 		newVal=max(GENERAL_MIN_VAL, curVal-0.1) \
@@ -429,8 +393,7 @@ def inputEvents(key, x, y):
 	# INCREMENT CURRENT PARAMETER OF CURRENT 
 	# LIGHT CONFIG ARRAY
 	elif key == b'h':
-		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT, 
-			len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])-1)
+		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT,len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])-1)
 		curVal=LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
 			[CURRENT_LIGHT_OPT]
 		newVal=min(GENERAL_MAX_VAL, curVal+0.1) \
@@ -448,6 +411,16 @@ def inputEvents(key, x, y):
 		n=len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])
 		CURRENT_LIGHT_OPT=(CURRENT_LIGHT_OPT+1)%n
 
+	# LIGHT MATERIAL
+	elif key == b'x' :
+		MATERIAL_OPT += 1
+		MATERIAL_OPT %= 5 # 4 Allows Manual Parameters
+
+	# SMOTH OR FLATH
+	elif key == b'z' :
+		CURRENT_SHADING += 1
+		CURRENT_SHADING %= 2
+
 	# EXIT
 	elif key == b'\x1b': 
 		# ESC KEY
@@ -458,11 +431,17 @@ def inputEvents(key, x, y):
 		ENABLE_RENDER=False
 		render()
 
+def drawSolidTorus(innerRadius, outerRadius, nsides, rings):
+	"""
+	Draws a Solid Torus.
+	"""	
+	glutSolidTorus(innerRadius, outerRadius, nsides, rings)
+
 def drawWireTorus(innerRadius, outerRadius, nsides, rings):
 	"""
 	Draws a Wire Torus.
 	"""
-	glutSolidTorus(innerRadius, outerRadius, nsides, rings)
+	glutWireTorus(innerRadius, outerRadius, nsides, rings)
 	
 def drawPentagonalPrism(baseEdgeSize, height):
 	"""
@@ -497,8 +476,7 @@ def drawHexagonalPyramid(width, height):
 		(-width,0,0),(-width/2,0,-width),(width/2,0,-width),(0,height*width,0))
 	
 	# 2. Defining all the edges (conections between vertexes) of the object
-	edges = ((0,1),(0,5),(0,6),(1,2),(1,6),
-		(2,3),(2,6),(3,4),(3,6),(4,5),(4,6),(5,6))
+	edges = ((0,1),(0,5),(0,6),(1,2),(1,6),(2,3),(2,6),(3,4),(3,6),(4,5),(4,6),(5,6))
 
 	# 3. Especify that we will draw lines
 	glBegin(GL_LINES)
@@ -511,12 +489,16 @@ def drawHexagonalPyramid(width, height):
 	glEnd()
 
 def drawObject(args):
+	setMaterial()
+
 	"""
 	Call the function that draws the object via id
 	"""
 	id = args[0]
-	if id == 0: # Wire Torus
+	if id == 0 and SOLID_TORUS == False: # Wire Torus
 		drawWireTorus(args[1], args[2], args[3], args[4])
+	elif id == 0 and SOLID_TORUS == True: # Solid Torus
+		drawSolidTorus(args[1], args[2], args[3], args[4])
 	elif id == 1: # Petagonal Prims
 		drawPentagonalPrism(args[1], args[2])
 	elif id == 2: # Hexagonal Pyramid
@@ -584,9 +566,8 @@ def makeTransformations():
 	gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0)
 
 	# Light-related transformations
-	glMatrixMode(GL_MODELVIEW)
-	shadingOptions()
-	setMaterial()
+	glMatrixMode(GL_MODELVIEW)	
+	shadingOptions()		
 
 	glMatrixMode(GL_PROJECTION)	
 	"""
@@ -607,18 +588,12 @@ def makeTransformations():
 		SCALE_Y_SIGNAL*SCALE_FACTOR, 
 		SCALE_Z_SIGNAL*SCALE_FACTOR)
 
-
 def render():
 	# Clean buffers (Color and Depth buffers)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-	# Define que irá trabalhar com a matriz de modelo/visão
-    #glMatrixMode(GL_MODELVIEW)
-    setLight()
-    setShading(curShading)
-
 	# Make all transformations
-	makeTransformations()
+	makeTransformations()  
 
 	# Set object color...
 	cR=LIGHT_ARRAYS['MAT_COLOR'][0]
@@ -647,10 +622,10 @@ if __name__ == '__main__':
 	# Set everything up in gl/glu/glut
 	setup()
 
+	# Rendering function
+	glutDisplayFunc(render)
+
 	# Select the function that the glut must listen for input events
 	glutKeyboardFunc(inputEvents)
-
-	# Rendering function
-	render()
 
 	glutMainLoop()
