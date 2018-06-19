@@ -136,7 +136,7 @@ def lightInit():
 	setLight()
 
 	# Define the color material
-	glColorMaterial(GL_FRONT, GL_SPECULAR)
+	glColorMaterial(GL_FRONT_AND_BACK, GL_SPECULAR)
 
 # Set the light 0 positon 
 def setLight():
@@ -529,6 +529,8 @@ def drawAxis():
 	"""
 	AXIS_LIM = 1.0
 
+	glDisable(GL_COLOR_MATERIAL)
+
 	glColor3f(1, 0, 0)
 	glBegin(GL_LINES)
 	glVertex3f(AXIS_LIM, 0, 0)
@@ -558,6 +560,8 @@ def drawAxis():
 	glVertex3f(0.025, 0.025, AXIS_LIM-0.025)
 	glVertex3f(0, 0, AXIS_LIM)
 	glEnd()
+
+	glEnable(GL_COLOR_MATERIAL)
 
 	# Back to light
 	glColor3f(1,1,1)
@@ -614,12 +618,6 @@ def render():
 
 	# Make all transformations
 	makeTransformations()  
-
-	# Set object color...
-	#cR=LIGHT_ARRAYS['MAT_COLOR'][0]
-	#cG=LIGHT_ARRAYS['MAT_COLOR'][1]
-	#cB=LIGHT_ARRAYS['MAT_COLOR'][2]
-	#glColor3f(cR, cG, cB)
 
 	# Draw object (passing the id)
 	drawObject(OBJECT_ARGUMENTS)
