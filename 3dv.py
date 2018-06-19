@@ -44,7 +44,7 @@ OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
 LIGHT_AMBIENT=[0.0, 0.0, 0.0, 1.0];
 LIGHT_DIFFUSE=[1.0, 1.0, 1.0, 1.0];
 LIGHT_SPECULAR=[1.0, 1.0, 1.0, 1.0];
-LIGHT_POSITION=[8, 5.0, 5.0, 1.0];
+LIGHT_POSITION=[3, 5.0, 5.0, 1.0];
 PROJECTION_ID=0	
 GENERAL_MAX_VAL=1.0
 GENERAL_MIN_VAL=0.0
@@ -275,11 +275,11 @@ def inputEvents(key, x, y):
 	elif key == b'2':
 		if(OBJECT_ARGUMENTS[0] == 1):
 			SOLID_PRISM = not SOLID_PRISM
-		OBJECT_ARGUMENTS=[1, 0.25, 0.75, 20, 20]		
+		OBJECT_ARGUMENTS=[1, 0.25, 20, 20]		
 	elif key == b'3':
 		if(OBJECT_ARGUMENTS[0] == 2):
 			SOLID_PYRAMID = not SOLID_PYRAMID
-		OBJECT_ARGUMENTS=[2, 0.25, 3, 0.0, 0.0]		
+		OBJECT_ARGUMENTS=[2, 0.25, 0.25, 20, 40]		
 
 	# PROJECTIONS COMMANDS
 	elif key == b'4':
@@ -424,90 +424,18 @@ def drawWireTorus(innerRadius, outerRadius, nsides, rings):
 	Draws a Wire Torus.
 	"""
 	glutWireTorus(innerRadius, outerRadius, nsides, rings)
-	
-def drawPentagonalPrism(baseEdgeSize, height, solid):
-	"""
-	Draws a Prims with a Pentagonal base.
-	"""
-	
-	x=[]
-	y=[]
-	z=[]
-	for zShift in (1, -1):
-		if solid:
-				glBegin(GL_POLYGON)
-		else:
-				glBegin(GL_LINE_STRIP)
 
-		for k in range(0, 6):
-			x.append(-baseEdgeSize*0.5*math.cos(0.4*math.pi*k))
-			y.append(math.tan(0.3*math.pi/2)*baseEdgeSize*math.sin(0.4*math.pi*k))
-			z.append(zShift*height/2.0)
-			glVertex3f(x[-1], y[-1], z[-1])
-		glEnd()
-	x.append(x[0])
-	y.append(y[0])
-	z.append(z[0])
-	
+def drawSphere(radius,slices,stacks):
+	glutWireSphere(radius,slices,stacks)
 
-	for i in range(0, 6):
-		if not solid:
-			glBegin(GL_LINES)
-			glVertex3f(x[i], y[i], z[i])
-			glVertex3f(x[i+6], y[i+6], z[i+6])
-			glEnd()
-		else:
-			glBegin(GL_POLYGON)
-			glVertex3f(x[i], y[i], z[i])
-			glVertex3f(x[i+6], y[i+6], z[i+6])
-			glVertex3f(x[i+7], y[i+7], z[i+7])
-			glVertex3f(x[i+1], y[i+1], z[i+1])
-			glEnd()
+def drawSolidSphere(radius,slices,stacks):
+	glutSolidSphere(radius,slices,stacks)
 
-def drawHexagonalPyramid(width, height):
-	"""
-	Draws a Pyramid with an hexagonal base
-	"""
+def drawCone(base,height,slices,stacks):
+	glutWireCone(base,height,slices,stacks)
 
-	# 1. Defining all the vertexes of the object
-	vertexes = ((width,0,0),(width/2,0,width),(-width/2,0,width),
-		(-width,0,0),(-width/2,0,-width),(width/2,0,-width),(0,height*width,0))
-	
-	# 2. Defining all the edges (conections between vertexes) of the object
-	edges = ((0,1),(0,5),(0,6),(1,2),(1,6),(2,3),(2,6),(3,4),(3,6),(4,5),(4,6),(5,6))
-
-	# 3. Especify that we will draw lines
-	glBegin(GL_LINES)
-
-	# 4. Connecting everything
-	for edge in edges:
-		for vertex in edge:
-			glVertex3fv(vertexes[vertex])
-	
-	glEnd()
-
-def drawSolidHexagonalPyramid(width, height):
-
-	"""
-	Draws a Pyramid with an hexagonal base
-	"""
-
-	# 1. Defining all the vertexes of the pyramid
-	vertexes = ((width,0,0),(width/2,0,width),(-width/2,0,width),
-		(-width,0,0),(-width/2,0,-width),(width/2,0,-width),(0,height*width,0))
-
-	# 2. Defining surfaces of the pyramid
-	surfaces = ((0,1,6),(1,2,6),(2,3,6),(3,4,6),(4,5,6),(5,0,6))
-
-	# 3. Especify that we will draw triangles
-	glBegin(GL_TRIANGLES)
-
-	# 4. Draw the pyramid
-	for surface in surfaces:
-		for vertex in surface:
-			glVertex3fv(vertexes[vertex])
-
-	glEnd()
+def drawSolidCone(base,height,slices,stacks):
+	glutSolidCone(base,height,slices,stacks)
 
 def drawObject(args):
 	setMaterial()
@@ -521,13 +449,13 @@ def drawObject(args):
 	elif id == 0 and SOLID_TORUS == True: # Solid Torus
 		drawSolidTorus(args[1], args[2], args[3], args[4])
 	elif id == 1 and SOLID_PRISM == False: # Wire Petagonal Prims
-		drawPentagonalPrism(args[1], args[2], False)
+		drawSphere(args[1], args[2], args[3])
 	elif id == 1 and SOLID_PRISM == True: # Solid Petagonal Prims
-		drawPentagonalPrism(args[1], args[2], True)
+		drawSolidSphere(args[1], args[2], args[3])
 	elif id == 2 and not(SOLID_PYRAMID): # Wire Hexagonal Pyramid
-		drawHexagonalPyramid(args[1], args[2])
+		drawCone(args[1], args[2], args[3], args[4])
 	elif id == 2 and SOLID_PYRAMID: #Solid Hexagonal Pyramid
-		drawSolidHexagonalPyramid(args[1], args[2])
+		drawSolidCone(args[1],args[2],args[3],args[4])
 	else:
 		raise ValueError('First argument of \'args\'',
 			'must be a integer between 0, 1 or 2.')
