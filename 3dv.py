@@ -47,7 +47,6 @@ SCALE_FACTOR=1.0
 SCALE_FACTOR_MAX=1.0
 SCALE_FACTOR_MIN=0.025
 SCALE_X_SIGNAL=SCALE_Y_SIGNAL=SCALE_Z_SIGNAL=1.0
-ENABLE_RENDER=True
 SHOW_AXIS=True
 OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
 LIGHT_AMBIENT=[0.0, 0.0, 0.0, 1.0];
@@ -60,16 +59,16 @@ GENERAL_MIN_VAL=0.0
 MAX_SHININESS=100.0
 MIN_SHININESS=0.0
 LIGHT_ARRAYS=odict()
-LIGHT_ARRAYS['MAT_AMBIENT']=[0.0, 0.0, 0.0, 0.0]
-LIGHT_ARRAYS['MAT_DIFFUSE']=[0.1, 0.5, 0.8, 1.0]
+LIGHT_ARRAYS['MAT_AMBIENT']=[0.0, 0.0, 0.0, 1.0]
+LIGHT_ARRAYS['MAT_DIFFUSE']=[0.5, 0.0, 0.0, 0.0]
 LIGHT_ARRAYS['MAT_EMISSION']=[0.0, 0.0, 0.0, 0.0]
-LIGHT_ARRAYS['MAT_SPECULAR']=[0.0, 0.0, 0.0, 0.0]
-LIGHT_ARRAYS['MAT_SHININESS']=[50.0]
-LIGHT_ARRAYS['MAT_COLOR']=[1.0, 1.0, 1.0]
+LIGHT_ARRAYS['MAT_SPECULAR']=[0.7, 0.6, 0.6, 0.0]
+LIGHT_ARRAYS['MAT_SHININESS']=[32.0]
+LIGHT_ARRAYS['MAT_COLOR']=[1.0, 0.0, 0.0]
 CURRENT_SHADING=1
 CURRENT_LIGHT_MAT='MAT_AMBIENT'
 CURRENT_LIGHT_OPT=0
-MATERIAL_OPT=0
+MATERIAL_OPT=4
 
 def setup():
 	"""
@@ -167,7 +166,13 @@ def setMaterial():
 		LIGHT_ARRAYS['MAT_SPECULAR']=no_mat
 		LIGHT_ARRAYS['MAT_SHININESS']=no_shininess
 		LIGHT_ARRAYS['MAT_EMISSION']=mat_emission
-	#elif MATERIAL_OPT = 4: 4 Allows Manual Parameters
+	elif MATERIAL_OPT == 4: # 4 Allows Manual Parameters
+		LIGHT_ARRAYS['MAT_AMBIENT']=[0.0, 0.0, 0.0, 1.0]
+		LIGHT_ARRAYS['MAT_DIFFUSE']=[0.5, 0.0, 0.0, 0.0]
+		LIGHT_ARRAYS['MAT_EMISSION']=[0.0, 0.0, 0.0, 0.0]
+		LIGHT_ARRAYS['MAT_SPECULAR']=[0.7, 0.6, 0.6, 0.0]
+		LIGHT_ARRAYS['MAT_SHININESS']=[32.0]
+		LIGHT_ARRAYS['MAT_COLOR']=[1.0, 0.0, 0.0]
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, LIGHT_ARRAYS['MAT_AMBIENT'])
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, LIGHT_ARRAYS['MAT_DIFFUSE'])
@@ -284,8 +289,7 @@ def inputEvents(key, x, y):
 	global GENERAL_MAX_VAL, GENERAL_MIN_VAL
 	global MAX_SHININESS, MIN_SHININESS
 	global X_COORD, Y_COORD, Z_COORD
-	global OBJECT_ARGUMENTS
-	global ENABLE_RENDER
+	global OBJECT_ARGUMENTS	
 	global PROJECTION_ID
 	global SCALE_FACTOR
 	global LIGHT_ARRAYS
@@ -429,11 +433,10 @@ def inputEvents(key, x, y):
 		# ESC KEY
 		print('Program is now exiting...')
 		exit(0)
-
-	if ENABLE_RENDER:
-		ENABLE_RENDER=False
-		render()
-
+	
+	# REDISPLAY
+	glutPostRedisplay()	
+	
 def drawSolidTorus(innerRadius, outerRadius, nsides, rings):
 	"""
 	Draws a Solid Torus.
@@ -640,11 +643,7 @@ def render():
 	# 2 --> glutSwapBuffers() --> For (and only for) 
 	#	double buffered windows: "An implicit glFlush 
 	# 	is done by glutSwapBuffers before it returns."
-	glutSwapBuffers()
-
-	# Enable another screen rendering call
-	global ENABLE_RENDER
-	ENABLE_RENDER=True
+	glutSwapBuffers()	
 
 if __name__ == '__main__':
 	# Set everything up in gl/glu/glut
