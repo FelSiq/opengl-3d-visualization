@@ -10,16 +10,6 @@
 """
 
 """
-	TODO:		
-		Desenhar modelo sólido dos objetos restantes.
-		Atualizar reset para configurações acima tambem ^
-		Organizar o código.
-		Achar o segfault de quando fecha.
-		Implementar o que o monitor sugeriu do Phong.
-		Justificar no relatório as decisões de projeto.
-"""
-
-"""
 The report of this work will be submitted with the part 2.
 
 """
@@ -264,7 +254,7 @@ def inputEvents(key, x, y):
 	"""
 	Map all input keys
 	"""
-	global CURRENT_LIGHT_MAT, CURRENT_LIGHT_OPT, CURRENT_SHADING, SOLID_TORUS, SOLID_PYRAMID, MATERIAL_OPT
+	global CURRENT_LIGHT_MAT, CURRENT_LIGHT_OPT, CURRENT_SHADING, SOLID_TORUS, SOLID_PRISM, SOLID_PYRAMID, MATERIAL_OPT
 	global SCALE_X_SIGNAL, SCALE_Y_SIGNAL, SCALE_Z_SIGNAL
 	global X_OBJECT_ANGLE, Y_OBJECT_ANGLE, Z_OBJECT_ANGLE
 	global GENERAL_MAX_VAL, GENERAL_MIN_VAL
@@ -434,7 +424,7 @@ def drawWireTorus(innerRadius, outerRadius, nsides, rings):
 	"""
 	glutWireTorus(innerRadius, outerRadius, nsides, rings)
 	
-def drawPentagonalPrism(baseEdgeSize, height):
+def drawPentagonalPrism(baseEdgeSize, height, solid):
 	"""
 	Draws a Prims with a Pentagonal base.
 	"""
@@ -443,19 +433,35 @@ def drawPentagonalPrism(baseEdgeSize, height):
 	y=[]
 	z=[]
 	for zShift in (1, -1):
-		glBegin(GL_LINE_STRIP)
+		if solid:
+				glBegin(GL_POLYGON)
+		else:
+				glBegin(GL_LINE_STRIP)
+
 		for k in range(0, 6):
 			x.append(-baseEdgeSize*0.5*math.cos(0.4*math.pi*k))
 			y.append(math.tan(0.3*math.pi/2)*baseEdgeSize*math.sin(0.4*math.pi*k))
 			z.append(zShift*height/2.0)
 			glVertex3f(x[-1], y[-1], z[-1])
 		glEnd()
+	x.append(x[0])
+	y.append(y[0])
+	z.append(z[0])
 	
+
 	for i in range(0, 6):
-		glBegin(GL_LINES)
-		glVertex3f(x[i], y[i], z[i])
-		glVertex3f(x[i+6], y[i+6], z[i+6])
-		glEnd()
+		if not solid:
+			glBegin(GL_LINES)
+			glVertex3f(x[i], y[i], z[i])
+			glVertex3f(x[i+6], y[i+6], z[i+6])
+			glEnd()
+		else:
+			glBegin(GL_POLYGON)
+			glVertex3f(x[i], y[i], z[i])
+			glVertex3f(x[i+6], y[i+6], z[i+6])
+			glVertex3f(x[i+7], y[i+7], z[i+7])
+			glVertex3f(x[i+1], y[i+1], z[i+1])
+			glEnd()
 
 def drawHexagonalPyramid(width, height):
 	"""
@@ -513,8 +519,10 @@ def drawObject(args):
 		drawWireTorus(args[1], args[2], args[3], args[4])
 	elif id == 0 and SOLID_TORUS == True: # Solid Torus
 		drawSolidTorus(args[1], args[2], args[3], args[4])
-	elif id == 1: # Petagonal Prims
-		drawPentagonalPrism(args[1], args[2])
+	elif id == 1 and SOLID_PRISM == False: # Wire Petagonal Prims
+		drawPentagonalPrism(args[1], args[2], False)
+	elif id == 1 and SOLID_PRISM == True: # Solid Petagonal Prims
+		drawPentagonalPrism(args[1], args[2], True)
 	elif id == 2 and not(SOLID_PYRAMID): # Wire Hexagonal Pyramid
 		drawHexagonalPyramid(args[1], args[2])
 	elif id == 2 and SOLID_PYRAMID: #Solid Hexagonal Pyramid
