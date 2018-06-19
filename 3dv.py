@@ -60,6 +60,7 @@ CURRENT_SHADING=1
 CURRENT_LIGHT_MAT='MAT_AMBIENT'
 CURRENT_LIGHT_OPT=0
 MATERIAL_OPT=15
+ENABLE_RENDER=True
 MATERIALS = {'emerald': ((.0215 ,.1745 ,.0215 ), (.07568 ,.61424 ,.07568 ), (.633 ,.727811 ,.633 ), .6, (1, 1, 1)),
 'jade': ((.135 ,.2225 ,.1575 ), (.54 ,.89 ,.63 ), (.316228 ,.316228 ,.316228 ), .1, (1, 1, 1)),
 'obsidian': ((.05375 ,.05 ,.06625 ), (.18275 ,.17 ,.22525 ), (.332741 ,.328634 ,.346435 ), .3, (1, 1, 1)),
@@ -537,9 +538,11 @@ def drawAxis():
 	"""
 	AXIS_LIM = 1.0
 
-	glDisable(GL_COLOR_MATERIAL)
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.75,0.75,0.75])
+	glMaterialfv(GL_FRONT, GL_SPECULAR, [1,1,1])
+	glMaterialfv(GL_FRONT, GL_SHININESS, [32])
 
-	glColor3f(1, 0, 0)
+	glMaterialfv(GL_FRONT, GL_AMBIENT, [1,0,0])
 	glBegin(GL_LINES)
 	glVertex3f(AXIS_LIM, 0, 0)
 	glVertex3f(-AXIS_LIM, 0, 0)
@@ -549,6 +552,7 @@ def drawAxis():
 	glVertex3f(AXIS_LIM, 0, 0)
 	glEnd()
 
+	glMaterialfv(GL_FRONT, GL_AMBIENT, [0,1,0])
 	glColor3f(0, 1, 0)
 	glBegin(GL_LINES)
 	glVertex3f(0, AXIS_LIM, 0)
@@ -559,6 +563,7 @@ def drawAxis():
 	glVertex3f(0, AXIS_LIM, 0)
 	glEnd()
 
+	glMaterialfv(GL_FRONT, GL_AMBIENT, [0,0,1])
 	glColor3f(0, 0, 1)
 	glBegin(GL_LINES)
 	glVertex3f(0, 0, AXIS_LIM)
@@ -568,8 +573,6 @@ def drawAxis():
 	glVertex3f(0.025, 0.025, AXIS_LIM-0.025)
 	glVertex3f(0, 0, AXIS_LIM)
 	glEnd()
-
-	glEnable(GL_COLOR_MATERIAL)
 
 	# Back to light
 	glColor3f(1,1,1)
@@ -638,7 +641,10 @@ def render():
 	# 2 --> glutSwapBuffers() --> For (and only for) 
 	#	double buffered windows: "An implicit glFlush 
 	# 	is done by glutSwapBuffers before it returns."
-	glutSwapBuffers()	
+	glutSwapBuffers()
+
+	global ENABLE_RENDER
+	ENABLE_RENDER=True
 
 if __name__ == '__main__':
 	# Set everything up in gl/glu/glut
