@@ -29,6 +29,7 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 import math
 from collections import OrderedDict as odict
+import re
 
 """
 Configuration variables section
@@ -53,23 +54,47 @@ OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
 LIGHT_AMBIENT=[0.0, 0.0, 0.0, 1.0];
 LIGHT_DIFFUSE=[1.0, 1.0, 1.0, 1.0];
 LIGHT_SPECULAR=[1.0, 1.0, 1.0, 1.0];
-LIGHT_POSITION=[2.0, 5.0, 5.0, 0.0];
+LIGHT_POSITION=[8, 5.0, 5.0, 1.0];
 PROJECTION_ID=0	
 GENERAL_MAX_VAL=1.0
 GENERAL_MIN_VAL=0.0
 MAX_SHININESS=100.0
 MIN_SHININESS=0.0
 LIGHT_ARRAYS=odict()
-LIGHT_ARRAYS['MAT_AMBIENT']=[0.0, 0.0, 0.0, 1.0]
-LIGHT_ARRAYS['MAT_DIFFUSE']=[0.5, 0.0, 0.0, 1.0]
-LIGHT_ARRAYS['MAT_EMISSION']=[0.0, 0.0, 0.0, 1.0]
-LIGHT_ARRAYS['MAT_SPECULAR']=[0.7, 0.6, 0.6, 1.0]
+LIGHT_ARRAYS['MAT_AMBIENT']=(0.0, 0.0, 0.0)
+LIGHT_ARRAYS['MAT_DIFFUSE']=[0.5, 0.0, 0.0]
+LIGHT_ARRAYS['MAT_EMISSION']=[0.0, 0.0, 0.0]
+LIGHT_ARRAYS['MAT_SPECULAR']=[0.7, 0.6, 0.6]
 LIGHT_ARRAYS['MAT_SHININESS']=[32.0]
 #LIGHT_ARRAYS['MAT_COLOR']=[1.0, 0.0, 0.0]
 CURRENT_SHADING=1
 CURRENT_LIGHT_MAT='MAT_AMBIENT'
 CURRENT_LIGHT_OPT=0
-MATERIAL_OPT=4
+MATERIAL_OPT=15
+MATERIALS = {'emerald': ((.0215 ,.1745 ,.0215 ), (.07568 ,.61424 ,.07568 ), (.633 ,.727811 ,.633 ), .6, (1, 1, 1)),
+'jade': ((.135 ,.2225 ,.1575 ), (.54 ,.89 ,.63 ), (.316228 ,.316228 ,.316228 ), .1, (1, 1, 1)),
+'obsidian': ((.05375 ,.05 ,.06625 ), (.18275 ,.17 ,.22525 ), (.332741 ,.328634 ,.346435 ), .3, (1, 1, 1)),
+'pearl': ((.25 ,.20725 ,.20725 ), (1 ,.829 ,.829 ), (.296648 ,.296648 ,.296648 ), .088, (1, 1, 1)),
+'ruby': ((.1745 ,.01175 ,.01175 ), (.61424 ,.04136 ,.04136 ), (.727811 ,.626959 ,.626959 ), .6, (1, 1, 1)),
+'turquoise': ((.1 ,.18725 ,.1745 ), (.396 ,.74151 ,.69102 ), (.297254 ,.30829 ,.306678 ), .1, (1, 1, 1)),
+'brass': ((.329412 ,.223529 ,.027451 ), (.780392 ,.568627 ,.113725 ), (.992157 ,.941176 ,.807843 ), .21794872, (1, 1, 1)),
+'bronze': ((.2125 ,.1275 ,.054 ), (.714 ,.4284 ,.18144 ), (.393548 ,.271906 ,.166721 ), .2, (1, 1, 1)),
+'chrome': ((.25 ,.25 ,.25 ), (.4 ,.4 ,.4 ), (.774597 ,.774597 ,.774597 ), .6, (1, 1, 1)),
+'copper': ((.19125 ,.0735 ,.0225 ), (.7038 ,.27048 ,.0828 ), (.256777 ,.137622 ,.086014 ), .1, (1, 1, 1)),
+'gold': ((.24725 ,.1995 ,.0745 ), (.75164 ,.60648 ,.22648 ), (.628281 ,.555802 ,.366065 ), .4, (1, 1, 1)),
+'silver': ((.19225 ,.19225 ,.19225 ), (.50754 ,.50754 ,.50754 ), (.508273 ,.508273 ,.508273 ), .4, (1, 1, 1)),
+'black plastic': ((.0 ,.0 ,.0 ), (.01 ,.01 ,.01 ), (.50 ,.50 ,.50 ), .25, (1, 1, 1)),
+'cyan plastic': ((.0 ,.1 ,.06 ), (.0 ,.50980392 ,.50980392 ), (.50196078 ,.50196078 ,.50196078 ), .25, (1, 1, 1)),
+'green plastic': ((.0 ,.0 ,.0 ), (.1 ,.35 ,.1 ), (.45 ,.55 ,.45 ), .25, (1, 1, 1)),
+'red plastic': ((.0 ,.0 ,.0 ), (.5 ,.0 ,.0 ), (.7 ,.6 ,.6 ), .25, (1, 1, 1)),
+'white plastic': ((.0 ,.0 ,.0 ), (.55 ,.55 ,.55 ), (.70 ,.70 ,.70 ), .25, (1, 1, 1)),
+'yellow plastic': ((.0 ,.0 ,.0 ), (.5 ,.5 ,.0 ), (.60 ,.60 ,.50 ), .25, (1, 1, 1)),
+'black rubber': ((.02 ,.02 ,.02 ), (.01 ,.01 ,.01 ), (.4 ,.4 ,.4 ), .078125, (1, 1, 1)),
+'cyan rubber': ((.0 ,.05 ,.05 ), (.4 ,.5 ,.5 ), (.04 ,.7 ,.7 ), .078125, (1, 1, 1)),
+'green rubber': ((.0 ,.05 ,.0 ), (.4 ,.5 ,.4 ), (.04 ,.7 ,.04 ), .078125, (1, 1, 1)),
+'red rubber': ((.05 ,.0 ,.0 ), (.5 ,.4 ,.4 ), (.7 ,.04 ,.04 ), .078125, (1, 1, 1)),
+'white rubber': ((.05 ,.05 ,.05 ), (.5 ,.5 ,.5 ), (.7 ,.7 ,.7 ), .078125, (1, 1, 1)),
+'yellow rubber': ((.05 ,.05 ,.0 ), (.5 ,.5 ,.4 ), (.7 ,.7 ,.04 ), .078125, (1, 1, 1))}
 
 def setup():
 	"""
@@ -107,13 +132,12 @@ def lightInit():
 	glEnable(GL_LIGHT0)
 	
 	# Informa que irá utilizar as cores do material
-	#glEnable(GL_COLOR_MATERIAL)
-
-	 # Setup the material
 	glEnable(GL_COLOR_MATERIAL)
-	#glColorMaterial(GL_FRONT, GL_SPECULAR)
 
 	setLight()
+
+	# Define the color material
+	glColorMaterial(GL_FRONT, GL_SPECULAR)
 
 # Set the light 0 positon 
 def setLight():
@@ -132,68 +156,18 @@ def shadingOptions():
 
 # Set the material properties
 def setMaterial():	
-	global LIGHT_ARRAYS
-	"""
-	no_mat = [0.0, 0.0, 0.0, 1.0]
-	mat_ambient = [0.7, 0.7, 0.7, 1.0]
-	mat_ambient_color = [0.8, 0.8, 0.2, 1.0]
-	mat_diffuse = [0.1, 0.5, 0.8, 1.0]
-	mat_specular = [1.0, 1.0, 1.0, 1.0]
-	no_shininess = [0.0, 0.0, 0.0, 0.0]
-	low_shininess = [5.0]
-	high_shininess = [100.0]
-	mat_emission = [0.3, 0.2, 0.2, 0.0]
+	global LIGHT_ARRAYS	
+	# Defining the material	
+	material = list (MATERIALS.keys())[MATERIAL_OPT]
+	LIGHT_ARRAYS['MAT_AMBIENT'] = list (MATERIALS[material][0]) # AMBIENT
+	LIGHT_ARRAYS['MAT_DIFFUSE'] = list (MATERIALS[material][1]) # DIFFUSE
+	LIGHT_ARRAYS['MAT_SPECULAR'] = list (MATERIALS[material][2]) # SPECULAR
+	LIGHT_ARRAYS['MAT_SHININESS'] = [MATERIALS[material][3] * 128] # SHININESS	
 	
-	
-	if MATERIAL_OPT ==  0:
-		# Diffuse reflection only; no ambient or specular
-		LIGHT_ARRAYS['MAT_AMBIENT']=no_mat
-		LIGHT_ARRAYS['MAT_DIFFUSE']=mat_diffuse
-		LIGHT_ARRAYS['MAT_SPECULAR']=no_mat
-		LIGHT_ARRAYS['MAT_SHININESS']=no_shininess 
-		LIGHT_ARRAYS['MAT_EMISSION']=no_mat
-	elif MATERIAL_OPT ==  1:
-		# Diffuse and specular reflection; low shininess; no ambient
-		LIGHT_ARRAYS['MAT_AMBIENT']=no_mat
-		LIGHT_ARRAYS['MAT_DIFFUSE']=mat_diffuse
-		LIGHT_ARRAYS['MAT_SPECULAR']=mat_specular
-		LIGHT_ARRAYS['MAT_SHININESS']=low_shininess
-		LIGHT_ARRAYS['MAT_EMISSION']=no_mat
-	elif MATERIAL_OPT ==  2:
-		# Diffuse and specular reflection; high shininess; no ambient
-		LIGHT_ARRAYS['MAT_AMBIENT']=no_mat
-		LIGHT_ARRAYS['MAT_DIFFUSE']=mat_diffuse
-		LIGHT_ARRAYS['MAT_SPECULAR']=mat_specular
-		LIGHT_ARRAYS['MAT_SHININESS']=high_shininess
-		LIGHT_ARRAYS['MAT_EMISSION']=no_mat
-	elif MATERIAL_OPT ==  3:
-		# Diffuse refl.; emission; no ambient or specular reflection
-		LIGHT_ARRAYS['MAT_AMBIENT']=no_mat
-		LIGHT_ARRAYS['MAT_DIFFUSE']=mat_diffuse
-		LIGHT_ARRAYS['MAT_SPECULAR']=no_mat
-		LIGHT_ARRAYS['MAT_SHININESS']=no_shininess
-		LIGHT_ARRAYS['MAT_EMISSION']=mat_emission
-	elif MATERIAL_OPT == 4: # 4 Allows Manual Parameters
-		LIGHT_ARRAYS['MAT_AMBIENT']=[0.0, 0.0, 0.0, 1.0]
-		LIGHT_ARRAYS['MAT_DIFFUSE']=[0.5, 0.0, 0.0, 0.0]
-		LIGHT_ARRAYS['MAT_EMISSION']=[0.0, 0.0, 0.0, 0.0]
-		LIGHT_ARRAYS['MAT_SPECULAR']=[0.7, 0.6, 0.6, 0.0]
-		LIGHT_ARRAYS['MAT_SHININESS']=[32.0]
-		LIGHT_ARRAYS['MAT_COLOR']=[1.0, 0.0, 0.0]
-	"""
-	glMaterialfv(GL_FRONT, GL_AMBIENT, LIGHT_ARRAYS['MAT_AMBIENT'])
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, LIGHT_ARRAYS['MAT_DIFFUSE'])
-	glMaterialfv(GL_FRONT, GL_SPECULAR, LIGHT_ARRAYS['MAT_SPECULAR'])
-	glMaterialfv(GL_FRONT, GL_SHININESS, LIGHT_ARRAYS['MAT_SHININESS'])
-	#glMaterialfv(GL_FRONT, GL_EMISSION, LIGHT_ARRAYS['MAT_EMISSION'])
-	
-"""
-
-"""
-def brackets(i, string):
-	return '['+string+']' \
-		if i == CURRENT_LIGHT_OPT \
-		else ' '+string+' '
+	glMaterialfv(GL_FRONT, GL_AMBIENT, list (LIGHT_ARRAYS['MAT_AMBIENT']))
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, list (LIGHT_ARRAYS['MAT_DIFFUSE']))
+	glMaterialfv(GL_FRONT, GL_SPECULAR, list (LIGHT_ARRAYS['MAT_SPECULAR']))
+	glMaterialfv(GL_FRONT, GL_SHININESS, list (LIGHT_ARRAYS['MAT_SHININESS']))
 
 """
 
@@ -237,9 +211,19 @@ def drawSubtitles():
 		'\nZ_angle=' + str(round(Z_OBJECT_ANGLE, 2)) +\
 		'\nzoom=' + str(round(SCALE_FACTOR*100)) + '%'
 
-	glColor3f(0.75, 0.75, 0.10)	
+	glColor3f(1, 1, 1)	
 	glLoadIdentity()
 	
+	mat=list(MATERIALS.keys())[MATERIAL_OPT].upper()
+	glRasterPos2f(-0.02*len(mat)/2, 0.7)
+	
+	for ch in mat:	
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, ord(ch))
+
+	glColor3f(0.75, 0.75, 0.10)	
+	glLoadIdentity()
+
+
 	yPos = 0.90
 	yInc = 30.0/WINDOW_HEIGHT
 	glRasterPos2f(-0.98, yPos)
@@ -251,24 +235,12 @@ def drawSubtitles():
 			glRasterPos2f(-0.98, yPos)
 
 	# Subtitle related to light-related stuff
-	text='  Light config:\n'
-	for mat, key in zip(LIGHT_ARRAYS.keys(), ['6', '7', '8', '9', '0', ')']):
-		text+= '*' if CURRENT_LIGHT_MAT==mat else ' '
-		text+=' '+key+': '+mat+'\n  '
+	text='Material Config\n'
+	for mat in LIGHT_ARRAYS.keys():
+		text+=re.sub('MAT_', '', mat).lower()+': '
 		vals=list(map(str, [round(i, 1) for i in LIGHT_ARRAYS[mat]]))
-		if mat == CURRENT_LIGHT_MAT:
-			for i in range(len(vals)):
-				text+=brackets(i, vals[i])
-		else:
-			text+=' '
-			text+='  '.join(vals)
+		text+=' '.join(vals)
 		text+='\n'
-
-	text+='commands:\n' +\
-		'g: +current\n' +\
-		'h: -current\n' +\
-		'.: next param\n'+\
-		',: prev param'
 	
 	glColor3f(0.05, 0.25, 0.90)
 	yPos=0.90
@@ -435,7 +407,7 @@ def inputEvents(key, x, y):
 	# LIGHT MATERIAL
 	elif key == b'x' :
 		MATERIAL_OPT += 1
-		MATERIAL_OPT %= 5 # 4 Allows Manual Parameters
+		MATERIAL_OPT %= 24 # 4 Allows Manual Parameters		
 
 	# SMOTH OR FLATH
 	elif key == b'z' :
@@ -640,6 +612,7 @@ def makeTransformations():
 def render():
 	# Clean buffers (Color and Depth buffers)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
 	# Make all transformations
 	makeTransformations()  
 
