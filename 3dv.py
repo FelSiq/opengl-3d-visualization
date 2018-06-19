@@ -66,7 +66,6 @@ LIGHT_ARRAYS['MAT_DIFFUSE']=[0.5, 0.0, 0.0]
 LIGHT_ARRAYS['MAT_EMISSION']=[0.0, 0.0, 0.0]
 LIGHT_ARRAYS['MAT_SPECULAR']=[0.7, 0.6, 0.6]
 LIGHT_ARRAYS['MAT_SHININESS']=[32.0]
-#LIGHT_ARRAYS['MAT_COLOR']=[1.0, 0.0, 0.0]
 CURRENT_SHADING=1
 CURRENT_LIGHT_MAT='MAT_AMBIENT'
 CURRENT_LIGHT_OPT=0
@@ -198,8 +197,8 @@ def drawSubtitles():
 		'\n+: +zoom' +\
 		'\n-: -zoom' +\
 		'\nt: toggle axis' +\
-		'\nx: light source' +\
-		'\nz: toning' +\
+		'\nx: switch material' +\
+		'\nz: flat/gouraud' +\
 		'\nr: RESET' +\
 		'\nESC: exit' +\
 		'\n\nParameters:' +\
