@@ -11,16 +11,11 @@
 
 """
 	TODO:		
-		Definir teclas para tonalização e fonte de iluminação, por enquanto está z e x.
-		Imprimir na tela legendas para ^
 		Desenhar modelo sólido dos objetos restantes.
-		Definir tecla para trocar entre modelo de arame e sólido,
-		Apresentar na legenda ^		
 		Atualizar reset para configurações acima tambem ^
 		Organizar o código.
 		Achar o segfault de quando fecha.
 		Implementar o que o monitor sugeriu do Phong.
-		Traduzir os comentários para o inglês.
 		Justificar no relatório as decisões de projeto.
 """
 
@@ -39,6 +34,7 @@ from collections import OrderedDict as odict
 Configuration variables section
 """
 SOLID_TORUS=True
+SOLID_PYRAMID=True
 WINDOW_WIDTH=1080
 WINDOW_HEIGHT=640
 X_OBJECT_ANGLE=Y_OBJECT_ANGLE=Z_OBJECT_ANGLE=30.0
@@ -115,22 +111,22 @@ def lightInit():
 
 	setLight()
 
-# Define a posição da luz 0
+# Set the light 0 positon 
 def setLight():
-	# Definindo todos os componentes da luz 0)
+	# Defining all light 0 components)
 	glLightfv(GL_LIGHT0, GL_AMBIENT, LIGHT_AMBIENT);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, LIGHT_DIFFUSE);
 	glLightfv(GL_LIGHT0, GL_SPECULAR,LIGHT_SPECULAR);
 	glLightfv(GL_LIGHT0, GL_POSITION, LIGHT_POSITION);
 
-# Função para definir o tipo de tonalização
+# Define the toning type
 def shadingOptions():
 	if CURRENT_SHADING == 0:
 		glShadeModel(GL_SMOOTH)
 	elif CURRENT_SHADING == 1:
 		glShadeModel(GL_FLAT)
 
-# Função utilizada para definir as propriedades do material
+# Set the material properties
 def setMaterial():	
 	global LIGHT_ARRAYS
 	no_mat = [0.0, 0.0, 0.0, 1.0]
@@ -193,11 +189,11 @@ def brackets(i, string):
 def drawSubtitles():
 	glDisable(GL_LIGHTING)
 	text = 'Subtitles' +\
-		'\n1: drawTorus' +\
-		'\n2: drawPrism' +\
-		'\n3: drawPyramid' +\
-		'\n4: Orthogonal Projection' +\
-		'\n5: Perspective Projection' +\
+		'\n1: draw solid/wire Torus' +\
+		'\n2: draw solid/wire Prism' +\
+		'\n3: draw solid/wire Pyramid' +\
+		'\n4: orthogonal projection' +\
+		'\n5: perspective projection' +\
 		'\nd: +x_coord' +\
 		'\ns: +y_coord' +\
 		'\ne: +z_coord' +\
@@ -216,6 +212,8 @@ def drawSubtitles():
 		'\n+: +zoom' +\
 		'\n-: -zoom' +\
 		'\nt: toggle axis' +\
+		'\nx: light source' +\
+		'\nz: toning' +\
 		'\nr: RESET' +\
 		'\nESC: exit' +\
 		'\n\nParameters:' +\
@@ -280,7 +278,7 @@ def inputEvents(key, x, y):
 	"""
 	Map all input keys
 	"""
-	global CURRENT_LIGHT_MAT, CURRENT_LIGHT_OPT, CURRENT_SHADING, SOLID_TORUS, MATERIAL_OPT
+	global CURRENT_LIGHT_MAT, CURRENT_LIGHT_OPT, CURRENT_SHADING, SOLID_TORUS, SOLID_PYRAMID, MATERIAL_OPT
 	global SCALE_X_SIGNAL, SCALE_Y_SIGNAL, SCALE_Z_SIGNAL
 	global X_OBJECT_ANGLE, Y_OBJECT_ANGLE, Z_OBJECT_ANGLE
 	global GENERAL_MAX_VAL, GENERAL_MIN_VAL
@@ -292,7 +290,7 @@ def inputEvents(key, x, y):
 	global SCALE_FACTOR
 	global LIGHT_ARRAYS
 	global SHOW_AXIS
-
+	
 	# DRAW OBJECTS
 	if key == b'1':
 		OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
@@ -301,6 +299,7 @@ def inputEvents(key, x, y):
 		OBJECT_ARGUMENTS=[1, 0.25, 0.75, 20, 20]		
 	elif key == b'3':
 		OBJECT_ARGUMENTS=[2, 0.25, 3, 0.0, 0.0]		
+		SOLID_PYRAMID = not SOLID_PYRAMID
 
 	# PROJECTIONS COMMANDS
 	elif key == b'4':
@@ -360,6 +359,10 @@ def inputEvents(key, x, y):
 		SCALE_X_SIGNAL=SCALE_Y_SIGNAL=SCALE_Z_SIGNAL=1.0 
 		X_COORD=Y_COORD=Z_COORD=0.0
 		SCALE_FACTOR=1.0
+		CURRENT_SHADING=1
+		CURRENT_LIGHT_MAT='MAT_AMBIENT'
+		CURRENT_LIGHT_OPT=0
+		MATERIAL_OPT=0
 
 	# LIGHT ARRAY PARAMETERS
 	elif key == b'6':
@@ -488,6 +491,29 @@ def drawHexagonalPyramid(width, height):
 	
 	glEnd()
 
+def drawSolidHexagonalPyramid(width, height):
+
+	"""
+	Draws a Pyramid with an hexagonal base
+	"""
+
+	# 1. Defining all the vertexes of the pyramid
+	vertexes = ((width,0,0),(width/2,0,width),(-width/2,0,width),
+		(-width,0,0),(-width/2,0,-width),(width/2,0,-width),(0,height*width,0))
+
+	# 2. Defining surfaces of the pyramid
+	surfaces = ((0,1,6),(1,2,6),(2,3,6),(3,4,6),(4,5,6),(5,0,6))
+
+	# 3. Especify that we will draw triangles
+	glBegin(GL_TRIANGLES)
+
+	# 4. Draw the pyramid
+	for surface in surfaces:
+		for vertex in surface:
+			glVertex3fv(vertexes[vertex])
+
+	glEnd()
+
 def drawObject(args):
 	setMaterial()
 
@@ -501,8 +527,10 @@ def drawObject(args):
 		drawSolidTorus(args[1], args[2], args[3], args[4])
 	elif id == 1: # Petagonal Prims
 		drawPentagonalPrism(args[1], args[2])
-	elif id == 2: # Hexagonal Pyramid
+	elif id == 2 and not(SOLID_PYRAMID): # Wire Hexagonal Pyramid
 		drawHexagonalPyramid(args[1], args[2])
+	elif id == 2 and SOLID_PYRAMID: #Solid Hexagonal Pyramid
+		drawSolidHexagonalPyramid(args[1], args[2])
 	else:
 		raise ValueError('First argument of \'args\'',
 			'must be a integer between 0, 1 or 2.')
