@@ -35,6 +35,7 @@ Configuration variables section
 """
 SOLID_TORUS=True
 SOLID_PYRAMID=True
+SOLID_PRISM=True
 WINDOW_WIDTH=1080
 WINDOW_HEIGHT=640
 X_OBJECT_ANGLE=Y_OBJECT_ANGLE=Z_OBJECT_ANGLE=30.0
@@ -60,11 +61,11 @@ MAX_SHININESS=100.0
 MIN_SHININESS=0.0
 LIGHT_ARRAYS=odict()
 LIGHT_ARRAYS['MAT_AMBIENT']=[0.0, 0.0, 0.0, 1.0]
-LIGHT_ARRAYS['MAT_DIFFUSE']=[0.5, 0.0, 0.0, 0.0]
-LIGHT_ARRAYS['MAT_EMISSION']=[0.0, 0.0, 0.0, 0.0]
-LIGHT_ARRAYS['MAT_SPECULAR']=[0.7, 0.6, 0.6, 0.0]
+LIGHT_ARRAYS['MAT_DIFFUSE']=[0.5, 0.0, 0.0, 1.0]
+LIGHT_ARRAYS['MAT_EMISSION']=[0.0, 0.0, 0.0, 1.0]
+LIGHT_ARRAYS['MAT_SPECULAR']=[0.7, 0.6, 0.6, 1.0]
 LIGHT_ARRAYS['MAT_SHININESS']=[32.0]
-LIGHT_ARRAYS['MAT_COLOR']=[1.0, 0.0, 0.0]
+#LIGHT_ARRAYS['MAT_COLOR']=[1.0, 0.0, 0.0]
 CURRENT_SHADING=1
 CURRENT_LIGHT_MAT='MAT_AMBIENT'
 CURRENT_LIGHT_OPT=0
@@ -106,7 +107,11 @@ def lightInit():
 	glEnable(GL_LIGHT0)
 	
 	# Informa que irá utilizar as cores do material
+	#glEnable(GL_COLOR_MATERIAL)
+
+	 # Setup the material
 	glEnable(GL_COLOR_MATERIAL)
+	#glColorMaterial(GL_FRONT, GL_SPECULAR)
 
 	setLight()
 
@@ -128,6 +133,7 @@ def shadingOptions():
 # Set the material properties
 def setMaterial():	
 	global LIGHT_ARRAYS
+	"""
 	no_mat = [0.0, 0.0, 0.0, 1.0]
 	mat_ambient = [0.7, 0.7, 0.7, 1.0]
 	mat_ambient_color = [0.8, 0.8, 0.2, 1.0]
@@ -137,6 +143,7 @@ def setMaterial():
 	low_shininess = [5.0]
 	high_shininess = [100.0]
 	mat_emission = [0.3, 0.2, 0.2, 0.0]
+	
 	
 	if MATERIAL_OPT ==  0:
 		# Diffuse reflection only; no ambient or specular
@@ -173,12 +180,12 @@ def setMaterial():
 		LIGHT_ARRAYS['MAT_SPECULAR']=[0.7, 0.6, 0.6, 0.0]
 		LIGHT_ARRAYS['MAT_SHININESS']=[32.0]
 		LIGHT_ARRAYS['MAT_COLOR']=[1.0, 0.0, 0.0]
-
+	"""
 	glMaterialfv(GL_FRONT, GL_AMBIENT, LIGHT_ARRAYS['MAT_AMBIENT'])
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, LIGHT_ARRAYS['MAT_DIFFUSE'])
 	glMaterialfv(GL_FRONT, GL_SPECULAR, LIGHT_ARRAYS['MAT_SPECULAR'])
 	glMaterialfv(GL_FRONT, GL_SHININESS, LIGHT_ARRAYS['MAT_SHININESS'])
-	glMaterialfv(GL_FRONT, GL_EMISSION, LIGHT_ARRAYS['MAT_EMISSION'])
+	#glMaterialfv(GL_FRONT, GL_EMISSION, LIGHT_ARRAYS['MAT_EMISSION'])
 	
 """
 
@@ -230,7 +237,7 @@ def drawSubtitles():
 		'\nZ_angle=' + str(round(Z_OBJECT_ANGLE, 2)) +\
 		'\nzoom=' + str(round(SCALE_FACTOR*100)) + '%'
 
-	glColor3f(0.75, 0.75, 0.10)
+	glColor3f(0.75, 0.75, 0.10)	
 	glLoadIdentity()
 	
 	yPos = 0.90
@@ -276,6 +283,9 @@ def drawSubtitles():
 			glRasterPos2f(0.60, yPos)
 	glEnable(GL_LIGHTING)
 
+	# Back to light
+	glColor3f(1,1,1)
+
 """
 
 """
@@ -297,13 +307,17 @@ def inputEvents(key, x, y):
 	
 	# DRAW OBJECTS
 	if key == b'1':
+		if(OBJECT_ARGUMENTS[0] == 0):
+			SOLID_TORUS = not SOLID_TORUS
 		OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
-		SOLID_TORUS = not SOLID_TORUS
 	elif key == b'2':
+		if(OBJECT_ARGUMENTS[0] == 1):
+			SOLID_PRISM = not SOLID_PRISM
 		OBJECT_ARGUMENTS=[1, 0.25, 0.75, 20, 20]		
 	elif key == b'3':
+		if(OBJECT_ARGUMENTS[0] == 2):
+			SOLID_PYRAMID = not SOLID_PYRAMID
 		OBJECT_ARGUMENTS=[2, 0.25, 3, 0.0, 0.0]		
-		SOLID_PYRAMID = not SOLID_PYRAMID
 
 	# PROJECTIONS COMMANDS
 	elif key == b'4':
@@ -574,6 +588,9 @@ def drawAxis():
 	glVertex3f(0, 0, AXIS_LIM)
 	glEnd()
 
+	# Back to light
+	glColor3f(1,1,1)
+
 def chooseProjection(id):
 	# Load identity matrix
 	glLoadIdentity()
@@ -619,18 +636,18 @@ def makeTransformations():
 		SCALE_Y_SIGNAL*SCALE_FACTOR, 
 		SCALE_Z_SIGNAL*SCALE_FACTOR)
 
+
 def render():
 	# Clean buffers (Color and Depth buffers)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
 	# Make all transformations
 	makeTransformations()  
 
 	# Set object color...
-	cR=LIGHT_ARRAYS['MAT_COLOR'][0]
-	cG=LIGHT_ARRAYS['MAT_COLOR'][1]
-	cB=LIGHT_ARRAYS['MAT_COLOR'][2]
-	glColor3f(cR, cG, cB)
+	#cR=LIGHT_ARRAYS['MAT_COLOR'][0]
+	#cG=LIGHT_ARRAYS['MAT_COLOR'][1]
+	#cB=LIGHT_ARRAYS['MAT_COLOR'][2]
+	#glColor3f(cR, cG, cB)
 
 	# Draw object (passing the id)
 	drawObject(OBJECT_ARGUMENTS)
