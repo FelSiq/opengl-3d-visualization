@@ -25,8 +25,8 @@ import re
 Configuration variables section
 """
 SOLID_TORUS=True
-SOLID_PYRAMID=True
-SOLID_PRISM=True
+SOLID_CONE=True
+SOLID_SPHERE=True
 WINDOW_WIDTH=1080
 WINDOW_HEIGHT=640
 X_OBJECT_ANGLE=Y_OBJECT_ANGLE=Z_OBJECT_ANGLE=30.0
@@ -60,7 +60,6 @@ CURRENT_SHADING=1
 CURRENT_LIGHT_MAT='MAT_AMBIENT'
 CURRENT_LIGHT_OPT=0
 MATERIAL_OPT=15
-ENABLE_RENDER=True
 MATERIALS = {'emerald': ((.0215 ,.1745 ,.0215 ), (.07568 ,.61424 ,.07568 ), (.633 ,.727811 ,.633 ), .6, (1, 1, 1)),
 'jade': ((.135 ,.2225 ,.1575 ), (.54 ,.89 ,.63 ), (.316228 ,.316228 ,.316228 ), .1, (1, 1, 1)),
 'obsidian': ((.05375 ,.05 ,.06625 ), (.18275 ,.17 ,.22525 ), (.332741 ,.328634 ,.346435 ), .3, (1, 1, 1)),
@@ -124,8 +123,6 @@ def lightInit():
 	# Informa que irá utilizar as cores do material
 	glEnable(GL_COLOR_MATERIAL)
 
-	setLight()
-
 	# Define the color material
 	glColorMaterial(GL_FRONT_AND_BACK, GL_SPECULAR)
 
@@ -163,11 +160,11 @@ def setMaterial():
 
 """	
 def drawSubtitles():
-	glDisable(GL_LIGHTING)
+	glDisable(GL_LIGHTING)	
 	text = 'Subtitles' +\
 		'\n1: draw solid/wire Torus' +\
-		'\n2: draw solid/wire Prism' +\
-		'\n3: draw solid/wire Pyramid' +\
+		'\n2: draw solid/wire Sphere' +\
+		'\n3: draw solid/wire Cone' +\
 		'\n4: orthogonal projection' +\
 		'\n5: perspective projection' +\
 		'\nd: +x_coord' +\
@@ -243,8 +240,8 @@ def drawSubtitles():
 		else:
 			yPos -= yInc
 			glRasterPos2f(0.60, yPos)
-	glEnable(GL_LIGHTING)
 
+	glEnable(GL_LIGHTING)
 	# Back to light
 	glColor3f(1,1,1)
 
@@ -255,7 +252,7 @@ def inputEvents(key, x, y):
 	"""
 	Map all input keys
 	"""
-	global CURRENT_LIGHT_MAT, CURRENT_LIGHT_OPT, CURRENT_SHADING, SOLID_TORUS, SOLID_PRISM, SOLID_PYRAMID, MATERIAL_OPT
+	global CURRENT_LIGHT_MAT, CURRENT_LIGHT_OPT, CURRENT_SHADING, SOLID_TORUS, SOLID_SPHERE, SOLID_CONE, MATERIAL_OPT
 	global SCALE_X_SIGNAL, SCALE_Y_SIGNAL, SCALE_Z_SIGNAL
 	global X_OBJECT_ANGLE, Y_OBJECT_ANGLE, Z_OBJECT_ANGLE
 	global GENERAL_MAX_VAL, GENERAL_MIN_VAL
@@ -274,11 +271,11 @@ def inputEvents(key, x, y):
 		OBJECT_ARGUMENTS=[0, 0.10, 0.25, 20, 40]
 	elif key == b'2':
 		if(OBJECT_ARGUMENTS[0] == 1):
-			SOLID_PRISM = not SOLID_PRISM
+			SOLID_SPHERE = not SOLID_SPHERE
 		OBJECT_ARGUMENTS=[1, 0.25, 20, 20]		
 	elif key == b'3':
 		if(OBJECT_ARGUMENTS[0] == 2):
-			SOLID_PYRAMID = not SOLID_PYRAMID
+			SOLID_CONE = not SOLID_CONE
 		OBJECT_ARGUMENTS=[2, 0.25, 0.25, 20, 40]		
 
 	# PROJECTIONS COMMANDS
@@ -342,62 +339,12 @@ def inputEvents(key, x, y):
 		CURRENT_SHADING=1
 		CURRENT_LIGHT_MAT='MAT_AMBIENT'
 		CURRENT_LIGHT_OPT=0
-		MATERIAL_OPT=0
-
-	# LIGHT ARRAY PARAMETERS
-	elif key == b'6':
-		CURRENT_LIGHT_MAT='MAT_AMBIENT' 
-	elif key == b'7':
-		CURRENT_LIGHT_MAT='MAT_DIFFUSE'
-	elif key == b'8':
-		CURRENT_LIGHT_MAT='MAT_EMISSION' 
-	elif key == b'9':
-		CURRENT_LIGHT_MAT='MAT_SPECULAR' 
-	elif key == b'0':
-		CURRENT_LIGHT_OPT=0
-		CURRENT_LIGHT_MAT='MAT_SHININESS' 
-	elif key == b')':
-		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT,len(LIGHT_ARRAYS['MAT_COLOR'])-1)
-		CURRENT_LIGHT_MAT='MAT_COLOR' 
-
-	# DECREMENT CURRENT PARAMETER OF CURRENT 
-	# LIGHT CONFIG ARRAY
-	elif key == b'g':
-		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT,len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])-1)
-		curVal=LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
-			[CURRENT_LIGHT_OPT]
-		newVal=max(GENERAL_MIN_VAL, curVal-0.1) \
-			if CURRENT_LIGHT_MAT != 'MAT_SHININESS' \
-			else max(MIN_SHININESS, curVal-1.0)
-
-		LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
-			[CURRENT_LIGHT_OPT]=newVal
-
-	# INCREMENT CURRENT PARAMETER OF CURRENT 
-	# LIGHT CONFIG ARRAY
-	elif key == b'h':
-		CURRENT_LIGHT_OPT=min(CURRENT_LIGHT_OPT,len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])-1)
-		curVal=LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
-			[CURRENT_LIGHT_OPT]
-		newVal=min(GENERAL_MAX_VAL, curVal+0.1) \
-			if CURRENT_LIGHT_MAT != 'MAT_SHININESS' \
-			else min(MAX_SHININESS, curVal+1.0)
-
-		LIGHT_ARRAYS[CURRENT_LIGHT_MAT]\
-			[CURRENT_LIGHT_OPT]=newVal
-
-	# 
-	elif key == b',':
-		n=len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])
-		CURRENT_LIGHT_OPT=(CURRENT_LIGHT_OPT-1)%n
-	elif key == b'.':
-		n=len(LIGHT_ARRAYS[CURRENT_LIGHT_MAT])
-		CURRENT_LIGHT_OPT=(CURRENT_LIGHT_OPT+1)%n
+		MATERIAL_OPT=15
 
 	# LIGHT MATERIAL
 	elif key == b'x' :
 		MATERIAL_OPT += 1
-		MATERIAL_OPT %= 24 # 4 Allows Manual Parameters		
+		MATERIAL_OPT %= 24 
 
 	# SMOTH OR FLATH
 	elif key == b'z' :
@@ -448,13 +395,13 @@ def drawObject(args):
 		drawWireTorus(args[1], args[2], args[3], args[4])
 	elif id == 0 and SOLID_TORUS == True: # Solid Torus
 		drawSolidTorus(args[1], args[2], args[3], args[4])
-	elif id == 1 and SOLID_PRISM == False: # Wire Petagonal Prims
+	elif id == 1 and SOLID_SPHERE == False: # Wire Sphere
 		drawSphere(args[1], args[2], args[3])
-	elif id == 1 and SOLID_PRISM == True: # Solid Petagonal Prims
+	elif id == 1 and SOLID_SPHERE == True: # Solid Sphere
 		drawSolidSphere(args[1], args[2], args[3])
-	elif id == 2 and not(SOLID_PYRAMID): # Wire Hexagonal Pyramid
+	elif id == 2 and not(SOLID_CONE): # Wire Cone
 		drawCone(args[1], args[2], args[3], args[4])
-	elif id == 2 and SOLID_PYRAMID: #Solid Hexagonal Pyramid
+	elif id == 2 and SOLID_CONE: # Solid Cone
 		drawSolidCone(args[1],args[2],args[3],args[4])
 	else:
 		raise ValueError('First argument of \'args\'',
@@ -466,11 +413,8 @@ def drawAxis():
 	"""
 	AXIS_LIM = 1.0
 
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.75,0.75,0.75])
-	glMaterialfv(GL_FRONT, GL_SPECULAR, [1,1,1])
-	glMaterialfv(GL_FRONT, GL_SHININESS, [32])
-
-	glMaterialfv(GL_FRONT, GL_AMBIENT, [1,0,0])
+	glDisable(GL_LIGHTING)
+	glColor3f(1, 0, 0)
 	glBegin(GL_LINES)
 	glVertex3f(AXIS_LIM, 0, 0)
 	glVertex3f(-AXIS_LIM, 0, 0)
@@ -480,7 +424,6 @@ def drawAxis():
 	glVertex3f(AXIS_LIM, 0, 0)
 	glEnd()
 
-	glMaterialfv(GL_FRONT, GL_AMBIENT, [0,1,0])
 	glColor3f(0, 1, 0)
 	glBegin(GL_LINES)
 	glVertex3f(0, AXIS_LIM, 0)
@@ -491,7 +434,6 @@ def drawAxis():
 	glVertex3f(0, AXIS_LIM, 0)
 	glEnd()
 
-	glMaterialfv(GL_FRONT, GL_AMBIENT, [0,0,1])
 	glColor3f(0, 0, 1)
 	glBegin(GL_LINES)
 	glVertex3f(0, 0, AXIS_LIM)
@@ -501,9 +443,9 @@ def drawAxis():
 	glVertex3f(0.025, 0.025, AXIS_LIM-0.025)
 	glVertex3f(0, 0, AXIS_LIM)
 	glEnd()
-
 	# Back to light
 	glColor3f(1,1,1)
+	glEnable(GL_LIGHTING)
 
 def chooseProjection(id):
 	# Load identity matrix
@@ -529,9 +471,9 @@ def makeTransformations():
 
 	# Light-related transformations
 	glMatrixMode(GL_MODELVIEW)	
+	setLight()
 	shadingOptions()		
 
-	glMatrixMode(GL_PROJECTION)	
 	"""
 	Make all transformations here...
 	"""	
@@ -570,9 +512,6 @@ def render():
 	#	double buffered windows: "An implicit glFlush 
 	# 	is done by glutSwapBuffers before it returns."
 	glutSwapBuffers()
-
-	global ENABLE_RENDER
-	ENABLE_RENDER=True
 
 if __name__ == '__main__':
 	# Set everything up in gl/glu/glut
